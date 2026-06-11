@@ -1,10 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:volume_booster_fresh/controllers/booster_controller.dart';
 import 'package:volume_booster_fresh/views/widgets/custom_drawer.dart';
-import 'package:volume_booster_fresh/views/widgets/glowing_button.dart';
 import 'package:volume_booster_fresh/views/widgets/metallic_knob.dart';
 
 class BoosterScreen extends StatelessWidget {
@@ -131,27 +129,10 @@ class BoosterScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      GlowingButton(
-                        onPressed: controller.manualPlayTestSound,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(
-                              Icons.play_arrow,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Test Sound',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
+                      const Text(
+                        'Use the knob to adjust volume. Boost mode allows you to exceed 100% for extra loudness.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 12, color: Colors.white70),
                       ),
                     ],
                   ),

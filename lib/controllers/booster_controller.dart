@@ -162,9 +162,7 @@ class BoosterController extends GetxController {
     _updateTimer?.cancel();
     _pendingVolume = -1;
 
-    if (!_audioFocusService.isMediaPlaying.value) {
-      _previewService.startPreview();
-    }
+
 
     if (_settingsService.isVibrationEnabled.value) {
       Vibration.vibrate(duration: 15);
