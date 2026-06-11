@@ -1,96 +1,110 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:volume_booster_fresh/routes/app_routes.dart';
 
 class DrawerControllerX extends GetxController {
-  final RxInt selectedIndex = 0.obs;
-  
-  void navigateTo(int index, BuildContext context) {
-    selectedIndex.value = index;
-    
+  // URLs
+  final String privacyPolicyUrl =
+      'https://sites.google.com/view/inverter-town-llc/privacy-policy';
+  final String termsOfServiceUrl =
+      'https://docs.google.com/document/d/12WTnUBG0hlYkg5fRPIwxP4VnNkUhv_gnC19ulCfgHic/edit';
+
+  // More Apps URL - Play Store developer page
+  final String moreAppsUrl =
+      'https://play.google.com/store/apps/developer?id=FutureDial+Labs+LLC';
+
+  Future<void> navigateTo(int index, BuildContext context) async {
+    // Close the drawer first
+    Navigator.pop(context);
+
     switch (index) {
-      case 0: // Home
-        Get.toNamed('/volume-settings');
+      case 0: // Volume Settings (Home Screen)
+        Get.offAllNamed(AppRoutes.volumeSettings);
         break;
-      case 1: // Volume Settings
-        Get.toNamed('/volume-settings');
+      case 1: // FAQ's and Help
+        Get.toNamed(AppRoutes.faq);
         break;
-      case 2: // Booster
-        Get.toNamed('/booster');
+      case 2: // More Apps
+        await _openMoreApps();
         break;
-      case 3: // Settings
-        Get.toNamed('/settings');
+      case 3: // Share
+        await _shareApp();
         break;
-      case 4: // About
-        _showAboutDialog();
+      case 4: // Terms of Service
+        await _openTermsOfService();
         break;
-      case 5: // Share
-        _shareApp();
-        break;
-      case 6: // Exit
-        _exitApp();
+      case 5: // Privacy Policy
+        await _openPrivacyPolicy();
         break;
     }
-    
+  }
+
+  /// Opens More Apps (Play Store developer page)
+  Future<void> _openMoreApps() async {
+    final Uri uri = Uri.parse(moreAppsUrl);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      // Silent fail
+      Get.snackbar(
+        'Error',
+        'Could not open Play Store',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  /// Opens Privacy Policy directly in Chrome
+  Future<void> _openPrivacyPolicy() async {
+    final Uri uri = Uri.parse(privacyPolicyUrl);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      // Silent fail
+    }
+  }
+
+  /// Opens Terms of Service directly in Chrome
+  Future<void> _openTermsOfService() async {
+    final Uri uri = Uri.parse(termsOfServiceUrl);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      // Silent fail
+    }
+  }
+
+  Future<void> _shareApp() async {
+    final String shareText = '''
+🔊 Volume Booster App - Boost Your Sound Up to 200%!
+
+✨ Features:
+• 📈 Boost volume up to 200%
+• 🎵 Crystal clear sound quality
+• 🎚️ Easy to use interface
+• ⚡ No root required
+• 🎧 Equalizer included
+
+📥 Download now and experience the difference!
+
+#VolumeBooster #SoundBoost #AudioEnhancer
+    ''';
+
+    try {
+      await Share.share(
+        shareText,
+        subject: 'Check out this amazing Volume Booster App!',
+      );
+    } catch (e) {
+      // Silent fail
+    }
+  }
+
+  void closeDrawer(BuildContext context) {
     Navigator.pop(context);
-  }
-  
-  void _showAboutDialog() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('About Volume Booster'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Version: 1.0.0'),
-            SizedBox(height: 10),
-            Text('Boost your device volume up to 200% with crystal clear sound quality.'),
-            SizedBox(height: 10),
-            Text('© 2024 Volume Booster App'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  void _shareApp() {
-    Get.snackbar(
-      'Share App',
-      'Share functionality would be implemented here',
-      snackPosition: SnackPosition.BOTTOM,
-    );
-  }
-  
-  void _exitApp() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Exit App'),
-        content: const Text('Are you sure you want to exit?'),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Get.back();
-              Get.closeAllSnackbars();
-              Future.delayed(const Duration(milliseconds: 100), () {
-                // Properly close the app
-                SystemNavigator.pop();
-              });
-            },
-            child: const Text('Exit', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
   }
 }

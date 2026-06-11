@@ -8,17 +8,14 @@ class CustomDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(DrawerControllerX());
-    
+
     return Drawer(
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.grey[900]!,
-              Colors.black,
-            ],
+            colors: [Colors.grey[900]!, Colors.black],
           ),
         ),
         child: ListView(
@@ -34,20 +31,18 @@ class CustomDrawer extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
-                  Icon(
-                    Icons.volume_up,
-                    size: 60,
-                    color: Colors.white,
-                  ),
+                  Icon(Icons.volume_up, size: 60, color: Colors.white),
                   SizedBox(height: 10),
                   Text(
-                    'Volume Booster',
+                    'Volume Control Launcher',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
+                    textAlign: TextAlign.center,
                   ),
+                  SizedBox(height: 5),
                   Text(
                     'Boost up to 200%',
                     style: TextStyle(color: Colors.white70),
@@ -56,56 +51,47 @@ class CustomDrawer extends StatelessWidget {
               ),
             ),
             _buildDrawerItem(
-              icon: Icons.home,
-              title: 'Home',
+              icon: Icons.ring_volume,
+              title: 'Volume Settings',
               index: 0,
               controller: controller,
             ),
             _buildDrawerItem(
-              icon: Icons.volume_down,
-              title: 'Volume Settings',
+              icon: Icons.help_outline,
+              title: "FAQ's and Help",
               index: 1,
               controller: controller,
             ),
             _buildDrawerItem(
-              icon: Icons.bolt,
-              title: 'Booster',
+              icon: Icons.apps,
+              title: 'More Apps',
               index: 2,
               controller: controller,
             ),
             _buildDrawerItem(
-              icon: Icons.settings,
-              title: 'Settings',
+              icon: Icons.share,
+              title: 'Share',
               index: 3,
               controller: controller,
             ),
-            const Divider(color: Colors.grey),
             _buildDrawerItem(
-              icon: Icons.info,
-              title: 'About Us',
+              icon: Icons.description,
+              title: 'Terms of Service',
               index: 4,
               controller: controller,
             ),
             _buildDrawerItem(
-              icon: Icons.share,
-              title: 'Share App',
+              icon: Icons.privacy_tip,
+              title: 'Privacy Policy',
               index: 5,
               controller: controller,
-            ),
-            const Divider(color: Colors.grey),
-            _buildDrawerItem(
-              icon: Icons.exit_to_app,
-              title: 'Exit',
-              index: 6,
-              controller: controller,
-              color: Colors.red,
             ),
           ],
         ),
       ),
     );
   }
-  
+
   Widget _buildDrawerItem({
     required IconData icon,
     required String title,
@@ -115,7 +101,10 @@ class CustomDrawer extends StatelessWidget {
   }) {
     return ListTile(
       leading: Icon(icon, color: color ?? Colors.green),
-      title: Text(title, style: TextStyle(color: color ?? Colors.white)),
+      title: Text(
+        title,
+        style: TextStyle(color: color ?? Colors.white, fontSize: 16),
+      ),
       onTap: () => controller.navigateTo(index, Get.context!),
     );
   }
