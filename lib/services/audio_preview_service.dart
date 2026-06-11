@@ -16,18 +16,6 @@ class AudioPreviewService extends GetxService {
     return this;
   }
 
-  // Future<void> startPreview() async {
-  //   if (!_isPlaying) {
-  //     try {
-  //       await _audioPlayer?.stop();
-  //       await _audioPlayer?.play(AssetSource('audio/subwoofer_test.mp3'));
-  //       await _audioPlayer?.setReleaseMode(ReleaseMode.loop);
-  //       _isPlaying = true;
-  //     } catch (e) {
-  //       print('Error: $e');
-  //     }
-  //   }
-  // }
 
   Future<void> updateVolumeSmooth(double volume) async {
     if (_isPlaying) {
