@@ -1,20 +1,14 @@
 
-// ignore_for_file: unused_local_variable
-
+import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
-import 'package:volume_booster_fresh/services/media_volume_service.dart';
 
 class VolumeService extends GetxService {
-  final MediaVolumeService _mediaVolumeService = Get.find();
-
-  // Media Volume (This controls YouTube, music, games)
-  final RxInt mediaVolume = 0.obs;
+  final RxInt mediaVolume = 50.obs;
   final RxInt maxMediaVolume = 100.obs;
 
-  // Other volume types (simulated)
-  final RxInt ringVolume = 0.obs;
-  final RxInt alarmVolume = 0.obs;
-  final RxInt notificationVolume = 0.obs;
+  final RxInt ringVolume = 50.obs;
+  final RxInt alarmVolume = 50.obs;
+  final RxInt notificationVolume = 50.obs;
 
   final RxInt maxRingVolume = 100.obs;
   final RxInt maxAlarmVolume = 100.obs;
@@ -22,105 +16,74 @@ class VolumeService extends GetxService {
 
   Future<VolumeService> init() async {
     await _initVolumes();
+    _listenToVolumeChanges();
     return this;
   }
 
   Future<void> _initVolumes() async {
     try {
-      // Get max media volume (this is the actual Android max, e.g., 15)
-      final actualMax = _mediaVolumeService.maxVolume.value;
-
-      // For UI, we use 0-100 scale
       maxMediaVolume.value = 100;
 
-      // Get current media volume as percentage (0-100)
-      final currentPercent = _mediaVolumeService.getVolumePercentage();
-      mediaVolume.value = currentPercent;
+      // Get current volume
+      final double? currentVol = await FlutterVolumeController.getVolume();
+      if (currentVol != null) {
+        mediaVolume.value = (currentVol * 100).round();
+        print('✅ Current volume: ${mediaVolume.value}%');
+      }
 
       // Initialize other volumes
-      maxRingVolume.value = 100;
-      maxAlarmVolume.value = 100;
-      maxNotificationVolume.value = 100;
-
-      ringVolume.value = currentPercent;
-      alarmVolume.value = currentPercent;
-      notificationVolume.value = currentPercent;
-
-      // Listen to media volume changes
-      _mediaVolumeService.currentVolume.listen((volume) {
-        final percent = _mediaVolumeService.getVolumePercentage();
-        mediaVolume.value = percent;
-        print('📱 Media volume changed to: $percent%');
-      });
-
-      print(
-        '✅ VolumeService initialized - Media volume: ${mediaVolume.value}%',
-      );
+      ringVolume.value = mediaVolume.value;
+      alarmVolume.value = mediaVolume.value;
+      notificationVolume.value = mediaVolume.value;
     } catch (e) {
-      print('❌ Error initializing volumes: $e');
-      maxMediaVolume.value = 100;
+      print('❌ Error: $e');
       mediaVolume.value = 50;
     }
   }
 
-  // Media Volume Methods - THIS CONTROLS YOUTUBE/MUSIC VOLUME
+  void _listenToVolumeChanges() {
+    FlutterVolumeController.addListener((double? volume) {
+      if (volume != null) {
+        mediaVolume.value = (volume * 100).round();
+        print('📱 Volume changed: ${mediaVolume.value}%');
+      }
+    });
+  }
+
   Future<void> setMediaVolume(int volumePercent) async {
     try {
-      final clampedPercent = volumePercent.clamp(0, 100);
-      await _mediaVolumeService.setVolumeByPercentage(clampedPercent);
-      mediaVolume.value = clampedPercent;
-      print('🎛️ Media volume set to: $clampedPercent%');
+      final clamped = volumePercent.clamp(0, 100);
+      await FlutterVolumeController.setVolume(clamped / 100.0);
+      mediaVolume.value = clamped;
+      print('🎛️ Volume set: $clamped%');
     } catch (e) {
-      print('❌ Error setting media volume: $e');
+      print('❌ Error: $e');
     }
   }
 
-  int getMediaVolumePercentage() {
-    return mediaVolume.value;
-  }
+  int getMediaVolumePercentage() => mediaVolume.value;
 
-  // Ring Volume Methods
   Future<void> setRingVolume(int volume) async {
-    try {
-      final clampedVolume = volume.clamp(0, maxRingVolume.value);
-      ringVolume.value = clampedVolume;
-      print('🔔 Ring volume set to: $clampedVolume%');
-    } catch (e) {
-      print('Error setting ring volume: $e');
-    }
+    ringVolume.value = volume.clamp(0, 100);
   }
 
-  int getRingVolumePercentage() {
-    return ringVolume.value;
-  }
+  int getRingVolumePercentage() => ringVolume.value;
 
-  // Alarm Volume Methods
   Future<void> setAlarmVolume(int volume) async {
-    try {
-      final clampedVolume = volume.clamp(0, maxAlarmVolume.value);
-      alarmVolume.value = clampedVolume;
-      print('⏰ Alarm volume set to: $clampedVolume%');
-    } catch (e) {
-      print('Error setting alarm volume: $e');
-    }
+    alarmVolume.value = volume.clamp(0, 100);
   }
 
-  int getAlarmVolumePercentage() {
-    return alarmVolume.value;
-  }
+  int getAlarmVolumePercentage() => alarmVolume.value;
 
-  // Notification Volume Methods
   Future<void> setNotificationVolume(int volume) async {
-    try {
-      final clampedVolume = volume.clamp(0, maxNotificationVolume.value);
-      notificationVolume.value = clampedVolume;
-      print('🔔 Notification volume set to: $clampedVolume%');
-    } catch (e) {
-      print('Error setting notification volume: $e');
-    }
+    notificationVolume.value = volume.clamp(0, 100);
   }
 
-  int getNotificationVolumePercentage() {
-    return notificationVolume.value;
+  int getNotificationVolumePercentage() => notificationVolume.value;
+
+  @override
+  void onClose() {
+    FlutterVolumeController.removeListener();
+    super.onClose();
   }
 }

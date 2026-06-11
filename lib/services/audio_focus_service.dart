@@ -6,14 +6,11 @@ class AudioFocusService extends GetxService {
   
   final RxBool isMediaPlaying = false.obs;
   final RxString currentAudioSource = 'None'.obs;
+  final RxString mediaStatus = '🔇 No media playing'.obs;
   
   Future<AudioFocusService> init() async {
-    // Set up method call handler for audio focus changes
     _channel.setMethodCallHandler(_handleMethodCall);
-    
-    // Request audio focus initially
     await _requestAudioFocus();
-    
     return this;
   }
   
@@ -21,18 +18,22 @@ class AudioFocusService extends GetxService {
     switch (call.method) {
       case 'onAudioFocusChange':
         final hasFocus = call.arguments as bool;
-        isMediaPlaying.value = !hasFocus; // If we lose focus, someone else is playing
+        // When we LOSE focus, someone else is playing (YouTube, Spotify)
+        isMediaPlaying.value = !hasFocus;
         if (!hasFocus) {
           currentAudioSource.value = 'YouTube / Media Player';
-          print('🎵 External media detected (YouTube/Spotify/etc.)');
+          mediaStatus.value = '🎵 Media playing (YouTube/Spotify) - Test sound disabled';
+          print('🎵 EXTERNAL MEDIA DETECTED - Test sound will STOP');
         } else {
           currentAudioSource.value = 'None';
-          print('🔇 No external media playing');
+          mediaStatus.value = '🔇 No media - Test sound available';
+          print('🔇 No external media - Test sound available');
         }
         break;
       case 'onAudioBecomingNoisy':
         isMediaPlaying.value = true;
         currentAudioSource.value = 'External Audio Source';
+        mediaStatus.value = '🎵 Media playing - Test sound disabled';
         print('🎵 External audio source detected');
         break;
     }
@@ -40,8 +41,8 @@ class AudioFocusService extends GetxService {
   
   Future<void> _requestAudioFocus() async {
     try {
-      await _channel.invokeMethod('requestAudioFocus');
-      print('✅ Audio focus requested');
+      final result = await _channel.invokeMethod('requestAudioFocus');
+      print('✅ Audio focus requested: $result');
     } catch (e) {
       print('❌ Error requesting audio focus: $e');
     }

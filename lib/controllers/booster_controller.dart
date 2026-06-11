@@ -1,351 +1,211 @@
-// import 'package:get/get.dart';
-// import 'package:vibration/vibration.dart';
-// import 'package:volume_booster_fresh/services/audio_boost_service.dart';
-// import 'package:volume_booster_fresh/services/audio_preview_service.dart';
-// import 'package:volume_booster_fresh/services/settings_service.dart';
-// import 'package:volume_booster_fresh/services/volume_service.dart';
 
-// class BoosterController extends GetxController {
-//   final VolumeService _volumeService = Get.find();
-//   final AudioBoostService _boostService = Get.find();
-//   final AudioPreviewService _previewService = Get.find();
-//   final SettingsService _settingsService = Get.find();
+import 'dart:async';
 
-//   final RxInt currentVolume = 100.obs;
-//   final RxBool isKnobDragging = false.obs;
-//   final RxString currentBoostStatus = 'OFF'.obs;
-
-//   @override
-//   void onInit() {
-//     super.onInit();
-//     _loadInitialVolume();
-//     _listenToSystemVolumeChanges();
-//   }
-
-//   void _loadInitialVolume() {
-//     currentVolume.value = _volumeService.getMediaVolumePercentage();
-//   }
-
-//   void _listenToSystemVolumeChanges() {
-//     // Update UI when system volume changes (e.g., using hardware buttons)
-//     _volumeService.mediaVolume.listen((volume) {
-//       final percentage = _volumeService.getMediaVolumePercentage();
-//       if (!isKnobDragging.value) {
-//         currentVolume.value = percentage;
-//         print('📱 System volume changed to: $percentage%');
-//       }
-//     });
-//   }
-
-//   void updateVolume(int newVolume) {
-//     final clampedVolume = newVolume.clamp(0, 200);
-//     currentVolume.value = clampedVolume;
-
-//     // Apply vibration if enabled during drag
-//     if (_settingsService.isVibrationEnabled.value && isKnobDragging.value) {
-//       Vibration.vibrate(duration: 10);
-//     }
-
-//     // Update actual device volume (0-100%)
-//     if (clampedVolume <= 100) {
-//       final actualVolume = (clampedVolume / 100) * _volumeService.maxMediaVolume.value;
-//       _volumeService.setMediaVolume(actualVolume.toInt());
-//       currentBoostStatus.value = 'OFF';
-//     } else {
-//       // Keep device at max volume for 100%+
-//       _volumeService.setMediaVolume(_volumeService.maxMediaVolume.value);
-//       final boostFactor = _boostService.getBoostFactorForPercentage(clampedVolume);
-//       currentBoostStatus.value = '${boostFactor.toStringAsFixed(1)}x';
-//     }
-
-//     // Update audio preview in real-time while dragging
-//     if (isKnobDragging.value) {
-//       _previewService.updateVolume(clampedVolume);
-//     }
-//   }
-
-//   void startKnobDrag() {
-//     isKnobDragging.value = true;
-//     // Start playing sound when knob is touched
-//     _previewService.startPreview();
-
-//     // Apply initial volume based on current value
-//     _previewService.updateVolume(currentVolume.value);
-
-//     // Haptic feedback
-//     if (_settingsService.isVibrationEnabled.value) {
-//       Vibration.vibrate(duration: 20);
-//     }
-
-//     print('🎵 Sound preview started at ${currentVolume.value}%');
-//   }
-
-//   void endKnobDrag() {
-//     isKnobDragging.value = false;
-//     // Stop sound after 3 seconds of inactivity
-//     _previewService.stopPreview();
-//     print('🎵 Sound preview stopped');
-//   }
-
-//   void manualPlayTestSound() {
-//     _previewService.playPreviewAtVolume(currentVolume.value);
-
-//     if (_settingsService.isVibrationEnabled.value) {
-//       Vibration.vibrate(duration: 15);
-//     }
-//   }
-
-//   bool isBoostActive() {
-//     return _boostService.isBoostActive(currentVolume.value);
-//   }
-
-//   String getBoostFactorText() {
-//     if (!isBoostActive()) return 'OFF';
-//     final factor = _boostService.getBoostFactorForPercentage(currentVolume.value);
-//     return '${factor.toStringAsFixed(1)}x';
-//   }
-
-//   int getDisplayPercentage() {
-//     return currentVolume.value;
-//   }
-
-//   @override
-//   void onClose() {
-//     _previewService.stopPreview();
-//     super.onClose();
-//   }
-// }
-
-// //2nd workingggggggggggggggggggggggggggggggggggggggg
-// import 'package:get/get.dart';
-// import 'package:vibration/vibration.dart';
-// import 'package:volume_booster_fresh/services/audio_boost_service.dart';
-// import 'package:volume_booster_fresh/services/audio_preview_service.dart';
-// import 'package:volume_booster_fresh/services/settings_service.dart';
-// import 'package:volume_booster_fresh/services/volume_service.dart';
-
-// class BoosterController extends GetxController {
-//   final VolumeService _volumeService = Get.find();
-//   final AudioBoostService _boostService = Get.find();
-//   final AudioPreviewService _previewService = Get.find();
-//   final SettingsService _settingsService = Get.find();
-
-//   final RxInt currentVolume = 0.obs;
-//   final RxBool isKnobDragging = false.obs;
-//   final RxString currentBoostStatus = 'OFF'.obs;
-
-//   @override
-//   void onInit() {
-//     super.onInit();
-//     _loadInitialVolume();
-//   }
-
-//   void _loadInitialVolume() {
-//     currentVolume.value = _volumeService.getMediaVolumePercentage();
-//   }
-
-//   void updateVolume(int newVolume) {
-//     final clampedVolume = newVolume.clamp(0, 200);
-//     currentVolume.value = clampedVolume;
-
-//     // Apply vibration if enabled during drag
-//     if (_settingsService.isVibrationEnabled.value && isKnobDragging.value) {
-//       Vibration.vibrate(duration: 5);
-//     }
-
-//     // Update actual device volume (0-100%)
-//     if (clampedVolume <= 100) {
-//       final actualVolume = (clampedVolume / 100) * _volumeService.maxMediaVolume.value;
-//       _volumeService.setMediaVolume(actualVolume.toInt());
-//       currentBoostStatus.value = 'OFF';
-//     } else {
-//       // Keep device at max volume for 100%+
-//       _volumeService.setMediaVolume(_volumeService.maxMediaVolume.value);
-//       final boostFactor = _boostService.getBoostFactorForPercentage(clampedVolume);
-//       currentBoostStatus.value = '${boostFactor.toStringAsFixed(1)}x';
-//     }
-
-//     // Update audio preview volume IMMEDIATELY while dragging
-//     if (isKnobDragging.value) {
-//       _previewService.updateVolume(clampedVolume);
-//     }
-//   }
-
-//   void startKnobDrag() {
-//     isKnobDragging.value = true;
-//     // Start playing sound immediately when knob is touched
-//     _previewService.startPreview().then((_) {
-//       // Set initial volume
-//       _previewService.updateVolume(currentVolume.value);
-//     });
-
-//     // Haptic feedback
-//     if (_settingsService.isVibrationEnabled.value) {
-//       Vibration.vibrate(duration: 20);
-//     }
-
-//     print('🎵 Sound preview started at ${currentVolume.value}%');
-//   }
-
-//   void endKnobDrag() {
-//     isKnobDragging.value = false;
-//     // Stop sound preview
-//     _previewService.stopPreview();
-//     print('🎵 Sound preview stopped');
-//   }
-
-//   void manualPlayTestSound() {
-//     _previewService.playPreviewAtVolume(currentVolume.value);
-
-//     if (_settingsService.isVibrationEnabled.value) {
-//       Vibration.vibrate(duration: 15);
-//     }
-//   }
-
-//   bool isBoostActive() {
-//     return _boostService.isBoostActive(currentVolume.value);
-//   }
-
-//   String getBoostFactorText() {
-//     if (!isBoostActive()) return 'OFF';
-//     final factor = _boostService.getBoostFactorForPercentage(currentVolume.value);
-//     return '${factor.toStringAsFixed(1)}x';
-//   }
-
-//   int getDisplayPercentage() {
-//     return currentVolume.value;
-//   }
-
-//   @override
-//   void onClose() {
-//     _previewService.stopPreview();
-//     super.onClose();
-//   }
-// }
-
-
-
-
-
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vibration/vibration.dart';
 import 'package:volume_booster_fresh/services/audio_boost_service.dart';
 import 'package:volume_booster_fresh/services/audio_preview_service.dart';
 import 'package:volume_booster_fresh/services/settings_service.dart';
 import 'package:volume_booster_fresh/services/volume_service.dart';
+import 'package:volume_booster_fresh/services/audio_focus_service.dart';
 
 class BoosterController extends GetxController {
   final VolumeService _volumeService = Get.find();
   final AudioBoostService _boostService = Get.find();
   final AudioPreviewService _previewService = Get.find();
   final SettingsService _settingsService = Get.find();
+  final AudioFocusService _audioFocusService = Get.find();
 
-  final RxInt currentVolume = 0.obs;
+  final RxInt currentVolume = 50.obs;
   final RxBool isKnobDragging = false.obs;
   final RxString currentBoostStatus = 'OFF'.obs;
+  final RxString mediaStatus = '🔇 No media'.obs;
+
+  Timer? _updateTimer;
+  bool _isUpdating = false;
+  int _pendingVolume = -1;
 
   @override
   void onInit() {
     super.onInit();
     _loadInitialVolume();
-    _listenToSystemVolumeChanges();
+    _listenToMediaStatus();
+    _listenToSystemVolume();
   }
 
   void _loadInitialVolume() {
     currentVolume.value = _volumeService.getMediaVolumePercentage();
-    print('🎛️ Initial volume: ${currentVolume.value}%');
+    print('🎛️ Initial: ${currentVolume.value}%');
   }
-  
-  void _listenToSystemVolumeChanges() {
-    // Update UI when system volume changes via hardware buttons
+
+  void _listenToSystemVolume() {
     _volumeService.mediaVolume.listen((volume) {
-      final percentage = _volumeService.getMediaVolumePercentage();
-      if (!isKnobDragging.value) {
-        currentVolume.value = percentage;
-        print('📱 Hardware volume button used: $percentage%');
+      if (!isKnobDragging.value && !_isUpdating) {
+        final percentage = volume;
+        if (percentage != currentVolume.value) {
+          currentVolume.value = percentage;
+          // Update boost status based on volume
+          if (percentage > 100) {
+            currentBoostStatus.value = '${(percentage / 100).toStringAsFixed(1)}x';
+          } else {
+            currentBoostStatus.value = 'OFF';
+          }
+        }
+      }
+    });
+  }
+
+  void _listenToMediaStatus() {
+    _audioFocusService.isMediaPlaying.listen((isPlaying) {
+      if (isPlaying) {
+        mediaStatus.value = '🎵 Media playing';
+        if (_previewService.isPlaying()) {
+          _previewService.stopPreview();
+        }
+      } else {
+        mediaStatus.value = '🔇 No media';
       }
     });
   }
 
   void updateVolume(int newVolume) {
-    final clampedVolume = newVolume.clamp(0, 200);
-    currentVolume.value = clampedVolume;
-
-    // Apply haptic feedback
-    if (_settingsService.isVibrationEnabled.value && isKnobDragging.value) {
-      Vibration.vibrate(duration: 5);
-    }
-
-    // ACTUAL SYSTEM VOLUME CONTROL
-    if (clampedVolume <= 100) {
-      // Normal mode: 0-100% -> Direct system volume control
-      _volumeService.setMediaVolume(clampedVolume);
-      _boostService.disableBoost();
+    if (_isUpdating) return;
+    
+    // Cancel any pending update
+    _updateTimer?.cancel();
+    
+    // Store the pending volume
+    _pendingVolume = newVolume;
+    
+    // Use a short delay to batch rapid updates
+    _updateTimer = Timer(const Duration(milliseconds: 16), () {
+      if (_pendingVolume != -1 && !_isUpdating) {
+        _applyVolumeChange(_pendingVolume);
+        _pendingVolume = -1;
+      }
+    });
+  }
+  
+  void _applyVolumeChange(int newVolume) async {
+    if (_isUpdating) return;
+    _isUpdating = true;
+    
+    final clamped = newVolume.clamp(0, 200);
+    
+    // Check if we're crossing the threshold (100%)
+    final wasBoostMode = currentVolume.value > 100;
+    final willBeBoostMode = clamped > 100;
+    
+    // Handle transition from boost to normal mode
+    if (wasBoostMode && !willBeBoostMode) {
+      // First disable boost
+      await _boostService.disableBoost();
+      // Small delay to ensure boost is disabled
+      await Future.delayed(const Duration(milliseconds: 10));
+      // Then set system volume
+      _volumeService.setMediaVolume(clamped);
       currentBoostStatus.value = 'OFF';
-      print('🎛️ Normal mode: System volume = $clampedVolume%');
-    } else {
-      // BOOST MODE: 101-200% -> System at 100% + Boost factor
-      // Set system volume to maximum (100%)
+    } 
+    // Handle transition from normal to boost mode
+    else if (!wasBoostMode && willBeBoostMode) {
+      // Set system to max first
       _volumeService.setMediaVolume(100);
-      
-      // Calculate boost factor (1.0x to 2.0x)
-      final boostFactor = _boostService.getBoostFactorForPercentage(clampedVolume);
-      currentBoostStatus.value = '${boostFactor.toStringAsFixed(1)}x';
-      
-      // Enable boost with the calculated factor
-      _boostService.setBoostLevel(boostFactor);
-      _boostService.enableBoost();
-      
-      print('⚡ BOOST MODE: ${clampedVolume}% → System:100% + Boost:${boostFactor}x');
+      // Small delay
+      await Future.delayed(const Duration(milliseconds: 10));
+      // Then apply boost
+      _boostService.applyBoost(clamped);
+      currentBoostStatus.value = '${(clamped / 100).toStringAsFixed(1)}x';
     }
-
-    // Update test sound volume if playing
-    if (isKnobDragging.value) {
-      _previewService.updateVolume(clampedVolume);
+    // Both in normal mode (≤100)
+    else if (!wasBoostMode && !willBeBoostMode) {
+      _volumeService.setMediaVolume(clamped);
+      currentBoostStatus.value = 'OFF';
     }
+    // Both in boost mode (>100)
+    else if (wasBoostMode && willBeBoostMode) {
+      _volumeService.setMediaVolume(100);
+      _boostService.applyBoost(clamped);
+      currentBoostStatus.value = '${(clamped / 100).toStringAsFixed(1)}x';
+    }
+    
+    // Update the UI value
+    currentVolume.value = clamped;
+    
+    // Update test sound if dragging
+    if (isKnobDragging.value && !_audioFocusService.isMediaPlaying.value) {
+      // Calculate preview volume (0.0 to 1.0)
+      double previewVol;
+      if (clamped <= 100) {
+        previewVol = clamped / 100.0;
+      } else {
+        previewVol = 1.0; // Max preview volume when boosted
+      }
+      _previewService.updateVolumeSmooth(previewVol);
+    }
+    
+    // Haptic feedback for every 5% change
+    if (_settingsService.isVibrationEnabled.value && isKnobDragging.value) {
+      if (clamped % 5 == 0) {
+        Vibration.vibrate(duration: 5);
+      }
+    }
+    
+    _isUpdating = false;
+    
+    print('🎛️ Volume updated: $clamped% (${willBeBoostMode ? 'BOOST' : 'NORMAL'} mode)');
   }
 
   void startKnobDrag() {
     isKnobDragging.value = true;
-    
-    // Start test sound for feedback
-    _previewService.startPreview().then((_) {
-      _previewService.updateVolume(currentVolume.value);
-    });
+    _isUpdating = false;
+    _updateTimer?.cancel();
+    _pendingVolume = -1;
 
-    // Haptic feedback
-    if (_settingsService.isVibrationEnabled.value) {
-      Vibration.vibrate(duration: 20);
+    if (!_audioFocusService.isMediaPlaying.value) {
+      _previewService.startPreview();
     }
 
+    if (_settingsService.isVibrationEnabled.value) {
+      Vibration.vibrate(duration: 15);
+    }
+    
     print('🎛️ Knob drag started');
   }
 
   void endKnobDrag() {
     isKnobDragging.value = false;
-    _previewService.startInactivityTimer();
-    print('🎛️ Knob drag ended - Current volume: ${currentVolume.value}%');
+    _updateTimer?.cancel();
+    _isUpdating = false;
+    _pendingVolume = -1;
+    
+    if (!_audioFocusService.isMediaPlaying.value && _previewService.isPlaying()) {
+      _previewService.startInactivityTimer();
+    }
+    
+    print('🎛️ Knob drag ended - Final volume: ${currentVolume.value}%');
   }
 
   void manualPlayTestSound() {
-    _previewService.playPreviewAtVolume(currentVolume.value);
-    if (_settingsService.isVibrationEnabled.value) {
-      Vibration.vibrate(duration: 15);
+    if (_audioFocusService.isMediaPlaying.value) {
+      Get.snackbar('Cannot Play', 'Media is playing', 
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange);
+      return;
     }
+    _previewService.playPreviewAtVolume(currentVolume.value);
   }
 
-  bool isBoostActive() {
-    return currentVolume.value > 100;
-  }
+  bool isBoostActive() => currentVolume.value > 100;
 
   String getBoostFactorText() {
     if (!isBoostActive()) return 'OFF';
-    final factor = _boostService.getBoostFactorForPercentage(currentVolume.value);
-    return '${factor.toStringAsFixed(1)}x';
+    return '${(currentVolume.value / 100).toStringAsFixed(1)}x';
   }
 
   @override
   void onClose() {
+    _updateTimer?.cancel();
     _previewService.stopPreview();
     _boostService.disableBoost();
     super.onClose();

@@ -8,5 +8,7 @@ class MainActivity: FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         flutterEngine.plugins.add(MediaVolumePlugin())
         flutterEngine.plugins.add(SystemSoundPlugin())
+        flutterEngine.plugins.add(EqualizerPlugin())
+         flutterEngine.plugins.add(AudioFocusPlugin())
     }
 }
