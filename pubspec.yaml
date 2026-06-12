@@ -74,6 +74,7 @@ flutter:
   assets:
     # - assets/audio/debwong1951-tsunami-test-siren-431947.mp3
     - assets/audio/subwoofer_test.mp3
+    - assets/images/metalic_knob.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

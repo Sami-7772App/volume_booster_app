@@ -1,4 +1,5 @@
 
+// ignore_for_file: unused_field
 
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -23,30 +24,24 @@ class MetallicKnob extends StatefulWidget {
 }
 
 class _MetallicKnobState extends State<MetallicKnob> {
-  double _currentAngle = 0;
-  int _lastNotifiedValue = -1;
   bool _isDragging = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _updateAngleFromValue(widget.value);
-  }
+  // Knob configuration definitions matching the picture
+  static const double _startAngleDegrees = 145.0;
+  static const double _endAngleDegrees =
+      395.0; // 395 means 35 degrees on next loop
+  static const double _totalSweepDegrees =
+      _endAngleDegrees - _startAngleDegrees; // 250°
 
-  @override
-  void didUpdateWidget(MetallicKnob oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value && !_isDragging) {
-      _updateAngleFromValue(widget.value);
-    }
-  }
+  double _degreesToRadians(double degrees) => degrees * pi / 180;
+  double _radiansToDegrees(double radians) => radians * 180 / pi;
 
-  void _updateAngleFromValue(int value) {
-    setState(() {
-      const minAngle = -pi * 0.75;
-      const maxAngle = pi * 0.75;
-      _currentAngle = minAngle + (value / 200) * (maxAngle - minAngle);
-    });
+  // Converts value (0-200) to radians for the rotation and painter
+  double _getValueAngleRadians(int value) {
+    final double pct = value / 200.0;
+    final double targetDegrees =
+        _startAngleDegrees + (pct * _totalSweepDegrees);
+    return _degreesToRadians(targetDegrees);
   }
 
   void _handlePanUpdate(DragUpdateDetails details, RenderBox box) {
@@ -55,36 +50,41 @@ class _MetallicKnobState extends State<MetallicKnob> {
     final dx = position.dx - center.dx;
     final dy = position.dy - center.dy;
 
-    double angle = atan2(dy, dx);
-    const minAngle = -pi * 0.75;
-    const maxAngle = pi * 0.75;
-    angle = angle.clamp(minAngle, maxAngle);
+    // Get angle in radians (-PI to PI)
+    double angleRad = atan2(dy, dx);
+    double angleDeg = _radiansToDegrees(angleRad);
 
-    final value = ((angle - minAngle) / (maxAngle - minAngle) * 200).round();
-    final clampedValue = value.clamp(0, 200);
+    // Normalize angle to a 0-360 range starting from 0 (Right axis)
+    if (angleDeg < 0) angleDeg += 360;
 
-    if (clampedValue != widget.value) {
-      widget.onChanged(clampedValue);
+    // Adjust for the gap at the bottom loop
+    if (angleDeg < _startAngleDegrees && angleDeg > (_endAngleDegrees - 360)) {
+      // Finger is in the bottom dead-zone gap
+      final midGap = (_startAngleDegrees + (_endAngleDegrees - 360)) / 2;
+      angleDeg = (angleDeg > midGap) ? _startAngleDegrees : _endAngleDegrees;
+    } else if (angleDeg <= (_endAngleDegrees - 360)) {
+      angleDeg += 360;
+    }
 
-      // Update angle immediately for smooth visual feedback
-      setState(() {
-        _currentAngle = angle;
-      });
+    // Map the calculated angle to our 0-200 range value
+    final double relativeDeg = angleDeg - _startAngleDegrees;
+    final double pct = (relativeDeg / _totalSweepDegrees).clamp(0.0, 1.0);
+    final int calculatedValue = (pct * 200).round();
 
-      // Provide haptic feedback on significant changes
-      if ((clampedValue - _lastNotifiedValue).abs() >= 2) {
-        _lastNotifiedValue = clampedValue;
-        HapticFeedback.selectionClick();
-      }
+    if (calculatedValue != widget.value) {
+      widget.onChanged(calculatedValue);
+      HapticFeedback.selectionClick();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Current rotation of the knob indicator line
+    final double knobRotation = _getValueAngleRadians(widget.value);
+
     return Listener(
       onPointerDown: (_) {
         _isDragging = true;
-        HapticFeedback.lightImpact();
         widget.onDragStart();
       },
       onPointerUp: (_) {
@@ -96,137 +96,241 @@ class _MetallicKnobState extends State<MetallicKnob> {
           final box = context.findRenderObject() as RenderBox;
           _handlePanUpdate(details, box);
         },
-        child: CustomPaint(
-          size: const Size(280, 280),
-          painter: MetallicKnobPainter(
-            angle: _currentAngle,
-            value: widget.value,
-          ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // 1. Scale ticks and Labels Painter
+            SizedBox(
+              width: 340,
+              height: 340,
+              child: CustomPaint(
+                painter: ScalePainter(
+                  value: widget.value,
+                  startAngleDeg: _startAngleDegrees,
+                  sweepDegrees: _totalSweepDegrees,
+                ),
+              ),
+            ),
+
+            // 2. Metallic Knob Base with Image
+            Transform.rotate(
+              angle: knobRotation,
+              child: Container(
+                width: 210,
+                height: 210,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.6),
+                      blurRadius: 16,
+                      spreadRadius: 4,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/metalic_knob.png', // Corrected path
+                    width: 210,
+                    height: 210,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback to gradient if image not found
+                      return Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: SweepGradient(
+                            center: Alignment.center,
+                            colors: const [
+                              Color(0xFFE8ECEF),
+                              Color(0xFF8A95A5),
+                              Color(0xFF2D3238),
+                              Color(0xFF5A6575),
+                              Color(0xFF1C2024),
+                              Color(0xFF9AA3B0),
+                              Color(0xFFE8ECEF),
+                            ],
+                            stops: const [
+                              0.0,
+                              0.15,
+                              0.35,
+                              0.5,
+                              0.65,
+                              0.85,
+                              1.0,
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+
+            // 3. Center cap for realistic knob look
+            Container(
+              width: 45,
+              height: 45,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.grey.shade300,
+                    Colors.grey.shade600,
+                    Colors.grey.shade800,
+                  ],
+                  stops: const [0.2, 0.6, 1.0],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey.shade700,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.5),
+                        blurRadius: 2,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class MetallicKnobPainter extends CustomPainter {
-  final double angle;
+class ScalePainter extends CustomPainter {
   final int value;
+  final double startAngleDeg;
+  final double sweepDegrees;
 
-  MetallicKnobPainter({required this.angle, required this.value});
+  ScalePainter({
+    required this.value,
+    required this.startAngleDeg,
+    required this.sweepDegrees,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
+    final radius = size.width / 2 - 20;
 
-    // Outer metallic ring
-    final outerPaint = Paint()
-      ..shader = const SweepGradient(
-        center: Alignment.center,
-        colors: [
-          Color(0xFF444444),
-          Color(0xFF888888),
-          Color(0xFFCCCCCC),
-          Color(0xFF888888),
-          Color(0xFF444444),
-        ],
-      ).createShader(Rect.fromCircle(center: center, radius: radius))
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius, outerPaint);
+    // Total number of smallest increments
+    const int totalTicks =
+        80; // 4 ticks per 10 units interval (every 2.5 units)
 
-    // Inner circle
-    final innerRadius = radius - 20;
-    final innerPaint = Paint()
-      ..shader = const RadialGradient(
-        center: Alignment(-0.3, -0.3),
-        colors: [Color(0xFFDDDDDD), Color(0xFF999999), Color(0xFF555555)],
-      ).createShader(Rect.fromCircle(center: center, radius: innerRadius))
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, innerRadius, innerPaint);
+    for (int i = 0; i <= totalTicks; i++) {
+      // Calculate active numeric value equivalent for this specific tick mark
+      final double calculatedValue = (i / totalTicks) * 200;
+      final bool isActive = calculatedValue <= value;
 
-    // Percentage markers
-    final markerPaint = Paint()
-      ..color = Colors.white70
-      ..strokeWidth = 2;
-    final textStyle = TextStyle(
-      color: Colors.white70,
-      fontSize: 12,
-      fontWeight: FontWeight.bold,
-    );
+      // Calculate placement rotation angle
+      final double currentDeg = startAngleDeg + (i / totalTicks * sweepDegrees);
+      final double rad = currentDeg * pi / 180;
 
-    for (int i = 0; i <= 10; i++) {
-      final percentage = i * 20;
-      final markerAngle = -pi * 0.75 + (percentage / 200) * (pi * 1.5);
+      // Distinguish major, medium and fine tick intervals
+      final bool isMajor = i % 10 == 0; // 0, 25, 50... step sizes
+      final bool isMid = i % 5 == 0 && !isMajor;
+
+      double tickLength = isMajor ? 16.0 : (isMid ? 11.0 : 7.0);
+      double strokeWidth = isMajor ? 3.0 : (isMid ? 2.0 : 1.2);
+
+      // Color tier logic according to image mapping
+      Color tickColor;
+      if (calculatedValue <= 100) {
+        tickColor = isActive
+            ? const Color(0xFF39FF14)
+            : Colors.green.withOpacity(0.25); // Neon green
+      } else if (calculatedValue <= 150) {
+        tickColor = isActive
+            ? const Color(0xFFFF9F00)
+            : Colors.orange.withOpacity(0.25); // Alert orange
+      } else {
+        tickColor = isActive
+            ? const Color(0xFFFF3B30)
+            : Colors.red.withOpacity(0.25); // High danger red
+      }
+
+      final tickPaint = Paint()
+        ..color = tickColor
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke;
+
       final startPoint = Offset(
-        center.dx + (innerRadius - 8) * cos(markerAngle),
-        center.dy + (innerRadius - 8) * sin(markerAngle),
+        center.dx + (radius - tickLength) * cos(rad),
+        center.dy + (radius - tickLength) * sin(rad),
       );
       final endPoint = Offset(
-        center.dx + (innerRadius - 18) * cos(markerAngle),
-        center.dy + (innerRadius - 18) * sin(markerAngle),
+        center.dx + radius * cos(rad),
+        center.dy + radius * sin(rad),
       );
 
-      canvas.drawLine(startPoint, endPoint, markerPaint);
+      canvas.drawLine(startPoint, endPoint, tickPaint);
 
-      // Draw percentage text
-      final textRadius = innerRadius - 28;
-      final textPoint = Offset(
-        center.dx + textRadius * cos(markerAngle),
-        center.dy + textRadius * sin(markerAngle),
-      );
+      // Render Text Strings alongside Major labels (0, 25, 50, 75...)
+      if (isMajor) {
+        final int displayValue = calculatedValue.round();
 
-      final textSpan = TextSpan(text: '$percentage%', style: textStyle);
-      final textPainter = TextPainter(
-        text: textSpan,
-        textDirection: TextDirection.ltr,
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        textPoint - Offset(textPainter.width / 2, textPainter.height / 2),
-      );
+        // Match specific styling colors from layout image
+        Color textColor = Colors.grey.shade400;
+        if (displayValue == value) {
+          textColor = Colors.white;
+        } else if (displayValue == 200) {
+          textColor =
+              Colors.white; // Explicit white accent highlight on 200 label
+        }
+
+        final textStyle = TextStyle(
+          color: textColor,
+          fontSize: displayValue == 200 ? 15 : 13,
+          fontWeight: displayValue == 200 ? FontWeight.w900 : FontWeight.w500,
+          fontFamily: 'SF Pro Display',
+          shadows: [
+            Shadow(
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        );
+
+        final textSpan = TextSpan(text: '$displayValue', style: textStyle);
+        final textPainter = TextPainter(
+          text: textSpan,
+          textDirection: TextDirection.ltr,
+        );
+        textPainter.layout();
+
+        // Push layout padding numbers slightly outward from line edges
+        final double labelRadius = radius + 20;
+        final labelPosition = Offset(
+          center.dx + labelRadius * cos(rad) - (textPainter.width / 2),
+          center.dy + labelRadius * sin(rad) - (textPainter.height / 2),
+        );
+
+        textPainter.paint(canvas, labelPosition);
+      }
     }
-
-    // Knob indicator with glow effect for boost mode
-    final indicatorLength = innerRadius - 15;
-    final indicatorPoint = Offset(
-      center.dx + indicatorLength * cos(angle),
-      center.dy + indicatorLength * sin(angle),
-    );
-
-    // Glow effect when boost is active
-    if (value > 100) {
-      final glowPaint = Paint()
-        ..color = Colors.green.withOpacity(0.4 + (value - 100) / 100 * 0.4)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
-      canvas.drawCircle(indicatorPoint, 14, glowPaint);
-    }
-
-    // Indicator circle
-    final indicatorPaint = Paint()
-      ..color = value > 100 ? Colors.green : Colors.orange
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(indicatorPoint, 10, indicatorPaint);
-
-    final innerIndicatorPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(indicatorPoint, 5, innerIndicatorPaint);
-
-    // Center cap
-    final capPaint = Paint()
-      ..color = Colors.grey[400]!
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, 22, capPaint);
-
-    final capInnerPaint = Paint()
-      ..color = Colors.grey[600]!
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, 15, capInnerPaint);
   }
 
   @override
-  bool shouldRepaint(MetallicKnobPainter oldDelegate) {
-    return oldDelegate.angle != angle || oldDelegate.value != value;
+  bool shouldRepaint(ScalePainter oldDelegate) {
+    return oldDelegate.value != value;
   }
 }
