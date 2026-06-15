@@ -1,11 +1,56 @@
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:volume_booster_fresh/controllers/volume_settings_controller.dart';
 import 'package:volume_booster_fresh/services/volume_service.dart';
 import 'package:volume_booster_fresh/views/widgets/custom_drawer.dart';
 
-class VolumeSettingsScreen extends StatelessWidget {
+class VolumeSettingsScreen extends StatefulWidget {
   const VolumeSettingsScreen({super.key});
+
+  @override
+  State<VolumeSettingsScreen> createState() => _VolumeSettingsScreenState();
+}
+
+class _VolumeSettingsScreenState extends State<VolumeSettingsScreen> {
+  BannerAd? _bannerAd;
+  bool _isAdLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBannerAd();
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // Test ad unit ID
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          setState(() {
+            _isAdLoaded = true;
+          });
+          print('✅ Banner ad loaded');
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          print('❌ Banner ad failed to load: $error');
+          setState(() {
+            _isAdLoaded = false;
+          });
+        },
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +77,16 @@ class VolumeSettingsScreen extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
+
+                // Banner Ad - Placed at TOP below AppBar
+                if (_isAdLoaded && _bannerAd != null)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    height: 50,
+                    child: AdWidget(ad: _bannerAd!),
+                  ),
 
                 // Volume Cards Section
                 Expanded(
@@ -189,7 +241,6 @@ class VolumeSettingsScreen extends StatelessWidget {
     required ValueChanged<double> onChanged,
     required VoidCallback onDragStart,
   }) {
-    // Ensure slider value is within bounds
     final double sliderValue = currentValue.toDouble().clamp(0.0, maxValue.toDouble());
     
     return Container(
@@ -203,7 +254,6 @@ class VolumeSettingsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header Row with Icon, Title, and Percentage
           Row(
             children: [
               Container(
@@ -243,8 +293,6 @@ class VolumeSettingsScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-
-          // Slider Row with Volume Icons
           Row(
             children: [
               Icon(Icons.volume_down, size: 14, color: Colors.grey[400]),

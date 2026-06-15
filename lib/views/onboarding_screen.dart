@@ -20,21 +20,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       title: 'The Songs\nYou Love!',
       description: '',
       icon: Icons.music_note,
-       // OR using image asset (uncomment to use image)
+      // OR using image asset (uncomment to use image)
       // imagePath: 'assets/onboarding/music.png',
     ),
     OnboardingItem(
       title: 'Take Your Music\nwith You',
       description: '',
       icon: Icons.headphones,
-       // OR using image asset (uncomment to use image)
+      // OR using image asset (uncomment to use image)
       // imagePath: 'assets/onboarding/music.png',
     ),
     OnboardingItem(
       title: 'Experience\nPro Audio',
       description: '',
       icon: Icons.equalizer,
-       // OR using image asset (uncomment to use image)
+      // OR using image asset (uncomment to use image)
       // imagePath: 'assets/onboarding/music.png',
     ),
   ];
@@ -98,7 +98,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             // Dots indicator and continue button
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 32.0,
+              ),
               child: Column(
                 children: [
                   Row(
@@ -161,11 +164,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              item.icon,
-              size: 70,
-              color: Colors.green,
-            ),
+            child: Icon(item.icon, size: 70, color: Colors.green),
           ),
           const SizedBox(height: 48),
           // Title

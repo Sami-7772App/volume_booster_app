@@ -1,7 +1,9 @@
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:volume_booster_fresh/routes/app_routes.dart';
+import 'package:volume_booster_fresh/services/app_open_ad_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,10 +16,26 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Check onboarding status and navigate after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      _checkAndNavigate();
+    // Show splash screen for 4 seconds, then show ad and navigate
+    Future.delayed(const Duration(seconds: 4), () {
+      _showAdAndNavigate();
     });
+  }
+
+  Future<void> _showAdAndNavigate() async {
+    try {
+      final adService = Get.find<AppOpenAdService>();
+      // Load and show the ad
+      await adService.loadAndShowAd();
+      
+      // Wait a moment for ad to be dismissed
+      await Future.delayed(const Duration(milliseconds: 500));
+    } catch (e) {
+      print('Error with app open ad: $e');
+    }
+    
+    // Navigate after ad
+    _checkAndNavigate();
   }
 
   void _checkAndNavigate() {
@@ -25,10 +43,8 @@ class _SplashScreenState extends State<SplashScreen> {
     final hasSeenOnboarding = box.read('hasSeenOnboarding') ?? false;
 
     if (hasSeenOnboarding) {
-      // User has already seen onboarding, go to main screen
       Get.offAllNamed(AppRoutes.volumeSettings);
     } else {
-      // First time user, show onboarding
       Get.offAllNamed(AppRoutes.onboarding);
     }
   }
@@ -36,21 +52,50 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF2C2F36), // Dark grey background
+      backgroundColor: const Color(0xFF1A1A1A),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Animated Logo
-            const SizedBox(width: 150, height: 150, child: LogoAnimation()),
+            SizedBox(
+              width: 150,
+              height: 150,
+              child: LogoAnimation(),
+            ),
+            const SizedBox(height: 30),
+            // App Name
+            const Text(
+              'Volume Booster',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 10),
+            // Tagline
+            const Text(
+              'Boost Your Sound Up to 200%',
+              style: TextStyle(
+                color: Colors.green,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 40),
+            // Loading indicator
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+              strokeWidth: 2,
+            ),
             const SizedBox(height: 20),
-            // Loading Text
             const Text(
               "Loading...",
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+                color: Colors.white54,
+                fontSize: 14,
               ),
             ),
           ],
@@ -81,13 +126,11 @@ class _LogoAnimationState extends State<LogoAnimation>
       duration: const Duration(seconds: 2),
     );
 
-    // Pulse animation (logo grows and shrinks)
     _pulseAnimation = Tween<double>(
       begin: 0.9,
       end: 1.1,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    // Start the animation and repeat forever
     _controller.repeat(reverse: true);
   }
 
@@ -106,12 +149,17 @@ class _LogoAnimationState extends State<LogoAnimation>
           scale: _pulseAnimation.value,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Colors.green, Colors.greenAccent],
+              ),
+              borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 10,
+                  color: Colors.green.withOpacity(0.5),
+                  blurRadius: 20,
+                  spreadRadius: 5,
                   offset: const Offset(0, 5),
                 ),
               ],
@@ -119,8 +167,8 @@ class _LogoAnimationState extends State<LogoAnimation>
             child: const Center(
               child: Icon(
                 Icons.volume_up_rounded,
-                size: 60,
-                color: Color(0xFF2C2F36),
+                size: 70,
+                color: Colors.white,
               ),
             ),
           ),
