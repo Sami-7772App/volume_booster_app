@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:volume_booster_fresh/routes/app_routes.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -13,10 +14,23 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Navigate to volume settings after 3 seconds
+    // Check onboarding status and navigate after 3 seconds
     Future.delayed(const Duration(seconds: 3), () {
-      Get.offAllNamed(AppRoutes.volumeSettings);
+      _checkAndNavigate();
     });
+  }
+
+  void _checkAndNavigate() {
+    final box = GetStorage();
+    final hasSeenOnboarding = box.read('hasSeenOnboarding') ?? false;
+
+    if (hasSeenOnboarding) {
+      // User has already seen onboarding, go to main screen
+      Get.offAllNamed(AppRoutes.volumeSettings);
+    } else {
+      // First time user, show onboarding
+      Get.offAllNamed(AppRoutes.onboarding);
+    }
   }
 
   @override
@@ -28,11 +42,7 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Animated Logo
-            const SizedBox(
-              width: 150,
-              height: 150,
-              child: LogoAnimation(),
-            ),
+            const SizedBox(width: 150, height: 150, child: LogoAnimation()),
             const SizedBox(height: 20),
             // Loading Text
             const Text(
@@ -72,9 +82,10 @@ class _LogoAnimationState extends State<LogoAnimation>
     );
 
     // Pulse animation (logo grows and shrinks)
-    _pulseAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _pulseAnimation = Tween<double>(
+      begin: 0.9,
+      end: 1.1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     // Start the animation and repeat forever
     _controller.repeat(reverse: true);
