@@ -1,4 +1,5 @@
 class AppRoutes {
+  static const String splash = '/splash';
   static const String volumeSettings = '/';
   static const String booster = '/booster';
   static const String settings = '/settings';
