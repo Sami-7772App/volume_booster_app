@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:get/get.dart';
 
