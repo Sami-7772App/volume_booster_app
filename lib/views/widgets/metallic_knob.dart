@@ -1,386 +1,3 @@
-// // ignore_for_file: unused_field
-
-// import 'dart:math';
-// import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
-
-// class MetallicKnob extends StatefulWidget {
-//   final int value;
-//   final ValueChanged<int> onChanged;
-//   final VoidCallback onDragStart;
-//   final VoidCallback onDragEnd;
-
-//   const MetallicKnob({
-//     super.key,
-//     required this.value,
-//     required this.onChanged,
-//     required this.onDragStart,
-//     required this.onDragEnd,
-//   });
-
-//   @override
-//   State<MetallicKnob> createState() => _MetallicKnobState();
-// }
-
-// class _MetallicKnobState extends State<MetallicKnob> {
-//   bool _isDragging = false;
-//   double _currentAngle = 0;
-
-//   // Knob configuration definitions matching the picture
-//   static const double _startAngleDegrees = 145.0;
-//   static const double _endAngleDegrees = 395.0;
-//   static const double _totalSweepDegrees =
-//       _endAngleDegrees - _startAngleDegrees;
-
-//   double _degreesToRadians(double degrees) => degrees * pi / 180;
-//   double _radiansToDegrees(double radians) => radians * 180 / pi;
-
-//   // Converts value (0-200) to radians for the rotation
-//   double _getValueAngleRadians(int value) {
-//     final double pct = value / 200.0;
-//     final double targetDegrees =
-//         _startAngleDegrees + (pct * _totalSweepDegrees);
-//     return _degreesToRadians(targetDegrees);
-//   }
-
-//   // Converts angle to value (0-200)
-//   int _angleToValue(double angleDeg) {
-//     // Normalize angle
-//     double normalizedAngle = angleDeg;
-//     if (normalizedAngle < _startAngleDegrees &&
-//         normalizedAngle > (_endAngleDegrees - 360)) {
-//       final midGap = (_startAngleDegrees + (_endAngleDegrees - 360)) / 2;
-//       normalizedAngle = (normalizedAngle > midGap)
-//           ? _startAngleDegrees
-//           : _endAngleDegrees;
-//     } else if (normalizedAngle <= (_endAngleDegrees - 360)) {
-//       normalizedAngle += 360;
-//     }
-
-//     final double relativeDeg = normalizedAngle - _startAngleDegrees;
-//     final double pct = (relativeDeg / _totalSweepDegrees).clamp(0.0, 1.0);
-//     return (pct * 200).round();
-//   }
-
-//   void _handlePanStart(DragStartDetails details) {
-//     setState(() {
-//       _isDragging = true;
-//     });
-//     widget.onDragStart();
-//     HapticFeedback.lightImpact();
-//   }
-
-//   void _handlePanUpdate(DragUpdateDetails details, RenderBox box) {
-//     final center = box.size.center(Offset.zero);
-//     final position = details.localPosition;
-//     final dx = position.dx - center.dx;
-//     final dy = position.dy - center.dy;
-
-//     // Get angle in radians (-PI to PI)
-//     double angleRad = atan2(dy, dx);
-//     double angleDeg = _radiansToDegrees(angleRad);
-
-//     // Normalize angle to 0-360 rang/*e
-//     if (angleDeg < 0) angleDeg += 360;
-
-//     // Update current angle for smooth rotation feedback
-//     setState(() {
-//       _currentAngle = angleDeg;
-//     });
-
-//     // Convert angle to value
-//     final int calculatedValue = _angleToValue(angleDeg);
-
-//     if (calculatedValue != widget.value) {
-//       widget.onChanged(calculatedValue);
-//       HapticFeedback.selectionClick();
-//     }
-//   }
-
-//   void _handlePanEnd(DragEndDetails details) {
-//     setState(() {
-//       _isDragging = false;
-//       _currentAngle = _getValueAngleRadians(widget.value) * 180 / pi;
-//     });
-//     widget.onDragEnd();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     // Get current rotation angle based on value or gesture
-//     final double knobRotation = _isDragging
-//         ? _degreesToRadians(_currentAngle)
-//         : _getValueAngleRadians(widget.value);
-
-//     // Calculate indicator rotation - the line should point outward from center
-//     // The indicator is drawn at 0 degrees (top), so we rotate it with the knob
-//     final double indicatorRotation = knobRotation;
-
-//     return GestureDetector(
-//       onPanStart: _handlePanStart,
-//       onPanUpdate: (details) {
-//         final box = context.findRenderObject() as RenderBox;
-//         _handlePanUpdate(details, box);
-//       },
-//       onPanEnd: _handlePanEnd,
-//       child: Stack(
-//         alignment: Alignment.center,
-//         children: [
-//           // Scale ticks and Labels Painter
-//           SizedBox(
-//             width: 340,
-//             height: 340,
-//             child: CustomPaint(
-//               painter: ScalePainter(
-//                 value: widget.value,
-//                 startAngleDeg: _startAngleDegrees,
-//                 sweepDegrees: _totalSweepDegrees,
-//               ),
-//             ),
-//           ),
-
-//           // Metallic Knob Base with Image (rotates with gesture)
-//           Transform.rotate(
-//             angle: knobRotation,
-//             child: Container(
-//               width: 210,
-//               height: 210,
-//               decoration: BoxDecoration(
-//                 shape: BoxShape.circle,
-//                 boxShadow: [
-//                   BoxShadow(
-//                     color: Colors.black.withOpacity(0.6),
-//                     blurRadius: 16,
-//                     spreadRadius: 4,
-//                     offset: const Offset(0, 4),
-//                   ),
-//                   if (_isDragging)
-//                     BoxShadow(
-//                       color: Colors.white.withOpacity(0.3),
-//                       blurRadius: 20,
-//                       spreadRadius: 8,
-//                     ),
-//                 ],
-//               ),
-//               child: ClipOval(
-//                 child: Image.asset(
-//                   'assets/images/metalic_knob.png',
-//                   width: 210,
-//                   height: 210,
-//                   fit: BoxFit.cover,
-//                 ),
-//               ),
-//             ),
-//           ),
-
-//           // Control indicator - shows current position (rotates with knob)
-//           Transform.rotate(
-//             angle: indicatorRotation,
-//             child: Container(
-//               width: 210,
-//               height: 210,
-//               child: CustomPaint(
-//                 painter: KnobIndicatorPainter(isDragging: _isDragging),
-//               ),
-//             ),
-//           ),
-
-//           // Optional: Show current value in center during drag
-//           if (_isDragging)
-//             Container(
-//               width: 60,
-//               height: 60,
-//               decoration: BoxDecoration(
-//                 shape: BoxShape.circle,
-//                 color: Colors.black.withOpacity(0.8),
-//                 boxShadow: [
-//                   BoxShadow(
-//                     color: Colors.black.withOpacity(0.5),
-//                     blurRadius: 8,
-//                   ),
-//                 ],
-//               ),
-//               child: Center(
-//                 child: Text(
-//                   '${widget.value}',
-//                   style: const TextStyle(
-//                     color: Colors.white,
-//                     fontSize: 18,
-//                     fontWeight: FontWeight.bold,
-//                   ),
-//                 ),
-//               ),
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-// // Custom painter for the knob indicator (the line/grip that shows the current position)
-// class KnobIndicatorPainter extends CustomPainter {
-//   final bool isDragging;
-
-//   KnobIndicatorPainter({this.isDragging = false});
-
-//   @override
-//   void paint(Canvas canvas, Size size) {
-//     final center = Offset(size.width / 2, size.height / 2);
-//     final radius = size.width / 2;
-
-//     // Draw the indicator line/grip pointing outward from the knob
-//     // The line starts from near the center and extends outward
-//     final lineStart = Offset(center.dx, center.dy - radius * 0.45);
-//     final lineEnd = Offset(center.dx, center.dy - radius * 0.82);
-
-//     // Create glow effect when dragging
-//     if (isDragging) {
-//       final glowPaint = Paint()
-//         ..color = Colors.white.withOpacity(0.5)
-//         ..strokeWidth = 8.0
-//         ..strokeCap = StrokeCap.round
-//         ..style = PaintingStyle.stroke;
-//       canvas.drawLine(lineStart, lineEnd, glowPaint);
-//     }
-
-//     // Main indicator line
-//     final linePaint = Paint()
-//       ..color = Colors.white.withOpacity(0.95)
-//       ..strokeWidth = isDragging ? 4.5 : 3.5
-//       ..strokeCap = StrokeCap.round
-//       ..style = PaintingStyle.stroke
-//       ..shader = const LinearGradient(
-//         begin: Alignment.topCenter,
-//         end: Alignment.bottomCenter,
-//         colors: [Colors.white, Colors.grey],
-//       ).createShader(Rect.fromPoints(lineStart, lineEnd));
-
-//     canvas.drawLine(lineStart, lineEnd, linePaint);
-
-//     // Add a small dot at the tip for better visibility
-//     final tipPaint = Paint()
-//       ..color = Colors.white
-//       ..style = PaintingStyle.fill;
-
-//     canvas.drawCircle(lineEnd, isDragging ? 3.5 : 2.5, tipPaint);
-//   }
-
-//   @override
-//   bool shouldRepaint(KnobIndicatorPainter oldDelegate) {
-//     return oldDelegate.isDragging != isDragging;
-//   }
-// }
-
-// class ScalePainter extends CustomPainter {
-//   final int value;
-//   final double startAngleDeg;
-//   final double sweepDegrees;
-
-//   ScalePainter({
-//     required this.value,
-//     required this.startAngleDeg,
-//     required this.sweepDegrees,
-//   });
-
-//   @override
-//   void paint(Canvas canvas, Size size) {
-//     final center = Offset(size.width / 2, size.height / 2);
-//     final radius = size.width / 2 - 20;
-
-//     // Total number of smallest increments
-//     const int totalTicks = 80;
-
-//     for (int i = 0; i <= totalTicks; i++) {
-//       final double calculatedValue = (i / totalTicks) * 200;
-//       final bool isActive = calculatedValue <= value;
-
-//       final double currentDeg = startAngleDeg + (i / totalTicks * sweepDegrees);
-//       final double rad = currentDeg * pi / 180;
-
-//       final bool isMajor = i % 10 == 0;
-//       final bool isMid = i % 5 == 0 && !isMajor;
-
-//       double tickLength = isMajor ? 16.0 : (isMid ? 11.0 : 7.0);
-//       double strokeWidth = isMajor ? 3.0 : (isMid ? 2.0 : 1.2);
-
-//       Color tickColor;
-//       if (calculatedValue <= 100) {
-//         tickColor = isActive
-//             ? const Color(0xFF39FF14)
-//             : Colors.green.withOpacity(0.25);
-//       } else if (calculatedValue <= 150) {
-//         tickColor = isActive
-//             ? const Color(0xFFFF9F00)
-//             : Colors.orange.withOpacity(0.25);
-//       } else {
-//         tickColor = isActive
-//             ? const Color(0xFFFF3B30)
-//             : Colors.red.withOpacity(0.25);
-//       }
-
-//       final tickPaint = Paint()
-//         ..color = tickColor
-//         ..strokeWidth = strokeWidth
-//         ..style = PaintingStyle.stroke;
-
-//       final startPoint = Offset(
-//         center.dx + (radius - tickLength) * cos(rad),
-//         center.dy + (radius - tickLength) * sin(rad),
-//       );
-//       final endPoint = Offset(
-//         center.dx + radius * cos(rad),
-//         center.dy + radius * sin(rad),
-//       );
-
-//       canvas.drawLine(startPoint, endPoint, tickPaint);
-
-//       if (isMajor) {
-//         final int displayValue = calculatedValue.round();
-
-//         Color textColor = Colors.grey.shade400;
-//         if (displayValue == value) {
-//           textColor = Colors.white;
-//         } else if (displayValue == 200) {
-//           textColor = Colors.white;
-//         }
-
-//         final textStyle = TextStyle(
-//           color: textColor,
-//           fontSize: displayValue == 200 ? 15 : 13,
-//           fontWeight: displayValue == 200 ? FontWeight.w900 : FontWeight.w500,
-//           fontFamily: 'SF Pro Display',
-//           shadows: [
-//             Shadow(
-//               color: Colors.black.withOpacity(0.5),
-//               blurRadius: 2,
-//               offset: const Offset(0, 1),
-//             ),
-//           ],
-//         );
-
-//         final textSpan = TextSpan(text: '$displayValue', style: textStyle);
-//         final textPainter = TextPainter(
-//           text: textSpan,
-//           textDirection: TextDirection.ltr,
-//         );
-//         textPainter.layout();
-
-//         final double labelRadius = radius + 20;
-//         final labelPosition = Offset(
-//           center.dx + labelRadius * cos(rad) - (textPainter.width / 2),
-//           center.dy + labelRadius * sin(rad) - (textPainter.height / 2),
-//         );
-
-//         textPainter.paint(canvas, labelPosition);
-//       }
-//     }
-//   }
-
-//   @override
-//   bool shouldRepaint(ScalePainter oldDelegate) {
-//     return oldDelegate.value != value;
-//   }
-// }
 
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -418,17 +35,38 @@ class VolumeBoosterScreen extends StatefulWidget {
   State<VolumeBoosterScreen> createState() => _VolumeBoosterScreenState();
 }
 
-class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
+class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> with SingleTickerProviderStateMixin {
   int _currentValue = 100; // Start at 100% (normal volume)
   bool _isBoosting = false;
   bool _isDragging = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isTestingAudio = false;
 
+  // Animation for smooth transitions
+  late AnimationController _animationController;
+  int _targetValue = 100;
+  bool _isAnimating = false;
+
   @override
   void initState() {
     super.initState();
     _initVolumeControl();
+
+    _animationController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 300),
+        )..addListener(() {
+          // Update value during animation
+          final currentAnimValue = _animationController.value;
+          final int animatedValue =
+              ((_targetValue - _currentValue) * currentAnimValue +
+                      _currentValue)
+                  .round();
+          if (animatedValue != _currentValue && !_isDragging) {
+            _updateValue(animatedValue, fromAnimation: true);
+          }
+        });
   }
 
   Future<void> _initVolumeControl() async {
@@ -440,31 +78,59 @@ class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
     }
   }
 
-  void _handleValueChanged(int value) async {
+  void _updateValue(int value, {bool fromAnimation = false}) {
+    if (_currentValue == value) return;
+
     setState(() {
       _currentValue = value;
       _isBoosting = value > 100;
     });
 
-    // Update system volume (0-200% maps to 0-100% system volume)
+    // Update system volume
     final systemVolume = (value / 200).clamp(0.0, 1.0);
     try {
-      await FlutterVolumeController.setVolume(systemVolume);
+      FlutterVolumeController.setVolume(systemVolume);
     } catch (e) {
       debugPrint('Error setting volume: $e');
     }
 
     // Play test sound if testing is enabled
     if (_isTestingAudio) {
-      await _playTestSound();
+      _playTestSound();
+    }
+  }
+
+  void _handleValueChanged(int value) {
+    if (_isAnimating) return;
+
+    // Clamp value
+    value = value.clamp(0, 200);
+
+    // Check if jump is too large
+    final int difference = (value - _currentValue).abs();
+    const int maxJump = 10;
+
+    if (difference > maxJump) {
+      // Start smooth animation to target
+      _targetValue = value;
+      _isAnimating = true;
+
+      // Reset animation controller
+      _animationController.reset();
+      _animationController.forward().then((_) {
+        _isAnimating = false;
+        // Ensure final value is set
+        _updateValue(_targetValue);
+      });
+    } else {
+      // Direct update for small changes
+      _updateValue(value);
     }
   }
 
   Future<void> _playTestSound() async {
     try {
       await _audioPlayer.setVolume(_currentValue / 200);
-      // Play a test tone or use existing asset
-      // For demonstration, we'll just adjust volume without playing
     } catch (e) {
       debugPrint('Error playing test sound: $e');
     }
@@ -476,7 +142,6 @@ class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
       setState(() => _isTestingAudio = false);
     } else {
       setState(() => _isTestingAudio = true);
-      // Try to play a test sound - you can add an asset or use a URL
       try {
         await _audioPlayer.play(AssetSource('audio/subwoofer_test.mp3'));
         _audioPlayer.onPlayerComplete.listen((event) {
@@ -486,30 +151,83 @@ class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
         });
       } catch (e) {
         debugPrint('Error playing test audio: $e');
-        // Fallback: just vibrate to indicate test mode
         await Vibration.vibrate(duration: 100);
       }
     }
   }
 
   void _resetToNormal() {
-    _handleValueChanged(100);
+    if (_isAnimating) return;
+    _targetValue = 100;
+    _isAnimating = true;
+    _animationController.reset();
+    _animationController.forward().then((_) {
+      _isAnimating = false;
+      _updateValue(100);
+    });
     HapticFeedback.mediumImpact();
   }
 
   void _boostMax() {
-    _handleValueChanged(200);
+    if (_isAnimating) return;
+    _targetValue = 200;
+    _isAnimating = true;
+    _animationController.reset();
+    _animationController.forward().then((_) {
+      _isAnimating = false;
+      _updateValue(200);
+    });
     HapticFeedback.heavyImpact();
   }
 
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _animationController.dispose();
     super.dispose();
+  }
+
+  // Function to get needle color based on value
+  Color _getNeedleColor(int value) {
+    if (value <= 100) {
+      return Colors.green;
+    } else if (value <= 150) {
+      double progress = (value - 100) / 50;
+      return Color.lerp(Colors.green, Colors.amber, progress)!;
+    } else if (value <= 200) {
+      double progress = (value - 150) / 50;
+      return Color.lerp(Colors.amber, Colors.red, progress)!;
+    }
+    return Colors.red;
+  }
+
+  // Function to get glow color based on value
+  Color _getGlowColor(int value) {
+    if (value <= 100) {
+      return Colors.green.withOpacity(0.1);
+    } else if (value <= 150) {
+      double progress = (value - 100) / 50;
+      return Color.lerp(
+        Colors.green.withOpacity(0.2),
+        Colors.amber.withOpacity(0.4),
+        progress,
+      )!;
+    } else if (value <= 200) {
+      double progress = (value - 150) / 50;
+      return Color.lerp(
+        Colors.amber.withOpacity(0.4),
+        Colors.red.withOpacity(0.6),
+        progress,
+      )!;
+    }
+    return Colors.red.withOpacity(0.6);
   }
 
   @override
   Widget build(BuildContext context) {
+    final needleColor = _getNeedleColor(_currentValue);
+    final glowColor = _getGlowColor(_currentValue);
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -530,7 +248,7 @@ class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 4,
-                  color: _isBoosting ? Colors.green : Colors.white70,
+                  color: _isBoosting ? needleColor : Colors.white70,
                 ),
               ),
               const SizedBox(height: 8),
@@ -539,13 +257,23 @@ class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
                 style: GoogleFonts.orbitron(
                   fontSize: 12,
                   letterSpacing: 2,
-                  color: _isBoosting ? Colors.green : Colors.grey,
+                  color: _isBoosting ? needleColor : Colors.grey,
                 ),
               ),
               const SizedBox(height: 10),
 
-              // Knob
-              Center(
+              // Knob with animated background glow
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: glowColor,
+                      blurRadius: _isBoosting ? 60 : 20,
+                      spreadRadius: _isBoosting ? 20 : 5,
+                    ),
+                  ],
+                ),
                 child: MetallicKnob(
                   value: _currentValue,
                   onChanged: _handleValueChanged,
@@ -556,6 +284,7 @@ class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
                   onDragEnd: () {
                     setState(() => _isDragging = false);
                   },
+                  needleColor: needleColor,
                 ),
               ),
 
@@ -572,7 +301,7 @@ class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
                     color: _isBoosting
-                        ? Colors.green.withOpacity(0.5)
+                        ? needleColor.withOpacity(0.5)
                         : Colors.white24,
                     width: 1,
                   ),
@@ -595,7 +324,7 @@ class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: _currentValue > 100
-                            ? Colors.green
+                            ? needleColor
                             : _currentValue < 100
                             ? Colors.orange
                             : Colors.white,
@@ -609,19 +338,19 @@ class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.2),
+                          color: needleColor.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.flash_on, size: 16, color: Colors.green),
+                            Icon(Icons.flash_on, size: 16, color: needleColor),
                             const SizedBox(width: 4),
                             Text(
                               '+${_currentValue - 100}%',
                               style: GoogleFonts.orbitron(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green,
+                                color: needleColor,
                               ),
                             ),
                           ],
@@ -652,7 +381,7 @@ class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
                         icon: Icons.flash_on,
                         label: 'MAX BOOST',
                         onPressed: _boostMax,
-                        color: Colors.green,
+                        color: needleColor,
                       ),
                     ),
                   ],
@@ -671,11 +400,11 @@ class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: _isTestingAudio
-                        ? Colors.green.withOpacity(0.2)
+                        ? needleColor.withOpacity(0.2)
                         : Colors.white10,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: _isTestingAudio ? Colors.green : Colors.white24,
+                      color: _isTestingAudio ? needleColor : Colors.white24,
                     ),
                   ),
                   child: Row(
@@ -684,7 +413,7 @@ class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
                       Icon(
                         _isTestingAudio ? Icons.volume_up : Icons.volume_off,
                         size: 16,
-                        color: _isTestingAudio ? Colors.green : Colors.white54,
+                        color: _isTestingAudio ? needleColor : Colors.white54,
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -692,9 +421,7 @@ class _VolumeBoosterScreenState extends State<VolumeBoosterScreen> {
                         style: GoogleFonts.orbitron(
                           fontSize: 11,
                           letterSpacing: 1,
-                          color: _isTestingAudio
-                              ? Colors.green
-                              : Colors.white54,
+                          color: _isTestingAudio ? needleColor : Colors.white54,
                         ),
                       ),
                     ],
@@ -774,6 +501,7 @@ class MetallicKnob extends StatefulWidget {
   final ValueChanged<int> onChanged;
   final VoidCallback onDragStart;
   final VoidCallback onDragEnd;
+  final Color needleColor;
 
   const MetallicKnob({
     super.key,
@@ -781,6 +509,7 @@ class MetallicKnob extends StatefulWidget {
     required this.onChanged,
     required this.onDragStart,
     required this.onDragEnd,
+    required this.needleColor,
   });
 
   @override
@@ -791,8 +520,8 @@ class _MetallicKnobState extends State<MetallicKnob> {
   double _currentAngle = 0;
   bool _isDragging = false;
 
-  static const double _minAngle = -pi * 0.75; // -135 degrees
-  static const double _maxAngle = pi * 0.75; // 135 degrees
+  static const double _minAngle = -pi * 0.75;
+  static const double _maxAngle = pi * 0.75;
 
   @override
   void initState() {
@@ -822,7 +551,6 @@ class _MetallicKnobState extends State<MetallicKnob> {
 
     double angle = atan2(dy, dx);
 
-    // Clamp angle to range
     if (angle < _minAngle) angle = _minAngle;
     if (angle > _maxAngle) angle = _maxAngle;
 
@@ -861,6 +589,7 @@ class _MetallicKnobState extends State<MetallicKnob> {
             painter: MetallicKnobPainter(
               angle: _currentAngle,
               value: widget.value,
+              needleColor: widget.needleColor,
             ),
           ),
         ),
@@ -872,15 +601,20 @@ class _MetallicKnobState extends State<MetallicKnob> {
 class MetallicKnobPainter extends CustomPainter {
   final double angle;
   final int value;
+  final Color needleColor;
 
-  MetallicKnobPainter({required this.angle, required this.value});
+  MetallicKnobPainter({
+    required this.angle,
+    required this.value,
+    required this.needleColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
-    // Outer metallic ring - dark grey with metallic shine
+    // Outer metallic ring
     final outerPaint = Paint()
       ..shader = RadialGradient(
         center: const Alignment(-0.3, -0.3),
@@ -939,36 +673,34 @@ class MetallicKnobPainter extends CustomPainter {
 
     final textStyle = TextStyle(
       color: Colors.white70,
-      fontSize: 11,
+      fontSize: 10,
       fontWeight: FontWeight.w600,
       fontFamily: 'monospace',
     );
 
-    // Draw tick marks - every 10 units from 0 to 200
+    // Draw tick marks
     for (int i = 0; i <= 20; i++) {
-      final percentage = i * 10; // 0, 10, 20... 200
+      final percentage = i * 10;
       final markerAngle = startAngle + (percentage / 200) * range;
 
       final bool isMajor = percentage % 20 == 0;
-      final bool isHalf = percentage % 10 == 0 && !isMajor;
-
       final paint = isMajor ? markerPaint : smallMarkerPaint;
-      final length = isMajor ? 16.0 : 10.0;
+      final length = isMajor ? 12.0 : 8.0;
 
+      final startOffset = 18.0;
       final startPoint = Offset(
-        center.dx + (innerRadius - 12) * cos(markerAngle),
-        center.dy + (innerRadius - 12) * sin(markerAngle),
+        center.dx + (innerRadius - startOffset) * cos(markerAngle),
+        center.dy + (innerRadius - startOffset) * sin(markerAngle),
       );
       final endPoint = Offset(
-        center.dx + (innerRadius - 12 - length) * cos(markerAngle),
-        center.dy + (innerRadius - 12 - length) * sin(markerAngle),
+        center.dx + (innerRadius - startOffset - length) * cos(markerAngle),
+        center.dy + (innerRadius - startOffset - length) * sin(markerAngle),
       );
 
       canvas.drawLine(startPoint, endPoint, paint);
 
-      // Draw label for major ticks
       if (isMajor) {
-        final labelRadius = innerRadius - 32;
+        final labelRadius = innerRadius - 42;
         final labelPoint = Offset(
           center.dx + labelRadius * cos(markerAngle),
           center.dy + labelRadius * sin(markerAngle),
@@ -988,14 +720,14 @@ class MetallicKnobPainter extends CustomPainter {
       }
     }
 
-    // Draw 0 and 200 labels at ends
+    // Draw 0 and 200 labels
     const double zeroAngle = -pi * 0.75;
     const double twoHundredAngle = pi * 0.75;
-    final double labelRadius = innerRadius - 32;
+    final double labelRadius = innerRadius - 42;
 
     final endTextStyle = TextStyle(
       color: value == 0 ? Colors.red : Colors.white54,
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: FontWeight.bold,
       fontFamily: 'monospace',
     );
@@ -1033,67 +765,68 @@ class MetallicKnobPainter extends CustomPainter {
           Offset(twoHundredPainter.width / 2, twoHundredPainter.height / 2),
     );
 
-    // Knob indicator line (the moving part)
-    final indicatorLength = innerRadius - 20;
+    // Knob indicator line
+    final indicatorLength = innerRadius - 30;
     final indicatorPoint = Offset(
       center.dx + indicatorLength * cos(angle),
       center.dy + indicatorLength * sin(angle),
     );
 
-    // Draw indicator line from center to edge
+    // Draw indicator line
     final linePaint = Paint()
-      ..color = value > 100 ? Colors.green : Colors.orange
+      ..color = needleColor
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(center, indicatorPoint, linePaint);
 
-    // Draw glow effect when boosted
+    // Draw glow effect
     if (value > 100) {
+      final glowIntensity = (value - 100) / 100;
       final glowPaint = Paint()
-        ..color = Colors.green.withOpacity(0.3 + (value - 100) / 100 * 0.5)
+        ..color = needleColor.withOpacity(0.3 + glowIntensity * 0.5)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
-      canvas.drawCircle(indicatorPoint, 16, glowPaint);
+      canvas.drawCircle(indicatorPoint, 14, glowPaint);
     }
 
-    // Indicator circle at the end of line
+    // Indicator circle
     final indicatorPaint = Paint()
-      ..color = value > 100 ? Colors.green : Colors.orange
+      ..color = needleColor
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(indicatorPoint, 10, indicatorPaint);
+    canvas.drawCircle(indicatorPoint, 8, indicatorPaint);
 
     final innerIndicatorPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(indicatorPoint, 5, innerIndicatorPaint);
+    canvas.drawCircle(indicatorPoint, 4, innerIndicatorPaint);
 
-    // Center cap (screw/logo look)
+    // Center cap
     final capPaint = Paint()
       ..shader = RadialGradient(
         center: const Alignment(-0.3, -0.3),
         colors: [Colors.grey[350]!, Colors.grey[600]!, Colors.grey[800]!],
-      ).createShader(Rect.fromCircle(center: center, radius: 24))
+      ).createShader(Rect.fromCircle(center: center, radius: 20))
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, 24, capPaint);
+    canvas.drawCircle(center, 20, capPaint);
 
     final capRingPaint = Paint()
       ..color = Colors.grey[400]!
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
-    canvas.drawCircle(center, 24, capRingPaint);
+    canvas.drawCircle(center, 20, capRingPaint);
 
     final capInnerPaint = Paint()
       ..shader = RadialGradient(
         center: const Alignment(0.3, 0.3),
         colors: [Colors.grey[500]!, Colors.grey[700]!, Colors.grey[900]!],
-      ).createShader(Rect.fromCircle(center: center, radius: 16))
+      ).createShader(Rect.fromCircle(center: center, radius: 14))
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, 16, capInnerPaint);
+    canvas.drawCircle(center, 14, capInnerPaint);
 
-    // Draw value indicator in center cap for boost mode
+    // Draw value indicator in center cap
     if (value > 100) {
       final boostTextStyle = TextStyle(
-        color: Colors.green,
-        fontSize: 10,
+        color: needleColor,
+        fontSize: 9,
         fontWeight: FontWeight.bold,
         fontFamily: 'monospace',
       );
@@ -1113,7 +846,7 @@ class MetallicKnobPainter extends CustomPainter {
     } else {
       final valueTextStyle = TextStyle(
         color: Colors.white70,
-        fontSize: 10,
+        fontSize: 9,
         fontWeight: FontWeight.bold,
         fontFamily: 'monospace',
       );
@@ -1132,6 +865,8 @@ class MetallicKnobPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(MetallicKnobPainter oldDelegate) {
-    return oldDelegate.angle != angle || oldDelegate.value != value;
+    return oldDelegate.angle != angle ||
+        oldDelegate.value != value ||
+        oldDelegate.needleColor != needleColor;
   }
 }

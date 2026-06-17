@@ -64,6 +64,29 @@ class _VolumeSettingsScreenState extends State<VolumeSettingsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          // Profile/Silent Mode Button
+          Obx(
+            () => IconButton(
+              icon: Icon(
+                controller.isPhoneSilent.value
+                    ? Icons.volume_off
+                    : Icons.volume_up,
+                color: controller.isPhoneSilent.value
+                    ? Colors.red
+                    : Colors.green,
+                size: 28,
+              ),
+              onPressed: () {
+                controller.toggleSilentMode();
+              },
+              tooltip: controller.isPhoneSilent.value
+                  ? 'Phone is Silent - Tap to enable sound'
+                  : 'Phone is Normal - Tap to enable silent mode',
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -79,6 +102,65 @@ class _VolumeSettingsScreenState extends State<VolumeSettingsScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 8),
+
+                // Silent Mode Banner
+                Obx(
+                  () => controller.isPhoneSilent.value
+                      ? Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.red, width: 1),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.volume_off,
+                                color: Colors.red,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  '🔇 Phone is in Silent Mode',
+                                  style: const TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => controller.toggleSilentMode(),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Text(
+                                    'UNMUTE',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
 
                 // Banner Ad - Placed at TOP below AppBar
                 if (_isAdLoaded && _bannerAd != null)
@@ -100,36 +182,42 @@ class _VolumeSettingsScreenState extends State<VolumeSettingsScreen> {
                             _buildVolumeCard(
                               title: 'Media',
                               icon: Icons.music_note,
-                              percentage: volumeService.getMediaVolumePercentage(),
+                              percentage: volumeService
+                                  .getMediaVolumePercentage(),
                               currentValue: volumeService.mediaVolume.value,
                               maxValue: volumeService.maxMediaVolume.value,
                               onChanged: (value) =>
                                   controller.updateMediaVolume(value),
                               onDragStart: controller.onMediaVolumeDragStart,
+                              isSilent: controller.isPhoneSilent.value,
                             ),
 
                             // Ringtone Volume
                             _buildVolumeCard(
                               title: 'Ringtone',
                               icon: Icons.phone_android,
-                              percentage: volumeService.getRingVolumePercentage(),
+                              percentage: volumeService
+                                  .getRingVolumePercentage(),
                               currentValue: volumeService.ringVolume.value,
                               maxValue: volumeService.maxRingVolume.value,
                               onChanged: (value) =>
                                   controller.updateRingVolume(value),
                               onDragStart: controller.onRingVolumeDragStart,
+                              isSilent: controller.isPhoneSilent.value,
                             ),
 
                             // Alarm Volume
                             _buildVolumeCard(
                               title: 'Alarm',
                               icon: Icons.alarm,
-                              percentage: volumeService.getAlarmVolumePercentage(),
+                              percentage: volumeService
+                                  .getAlarmVolumePercentage(),
                               currentValue: volumeService.alarmVolume.value,
                               maxValue: volumeService.maxAlarmVolume.value,
                               onChanged: (value) =>
                                   controller.updateAlarmVolume(value),
                               onDragStart: controller.onAlarmVolumeDragStart,
+                              isSilent: controller.isPhoneSilent.value,
                             ),
 
                             // Notification Volume
@@ -138,11 +226,15 @@ class _VolumeSettingsScreenState extends State<VolumeSettingsScreen> {
                               icon: Icons.notifications,
                               percentage: volumeService
                                   .getNotificationVolumePercentage(),
-                              currentValue: volumeService.notificationVolume.value,
-                              maxValue: volumeService.maxNotificationVolume.value,
+                              currentValue:
+                                  volumeService.notificationVolume.value,
+                              maxValue:
+                                  volumeService.maxNotificationVolume.value,
                               onChanged: (value) =>
                                   controller.updateNotificationVolume(value),
-                              onDragStart: controller.onNotificationVolumeDragStart,
+                              onDragStart:
+                                  controller.onNotificationVolumeDragStart,
+                              isSilent: controller.isPhoneSilent.value,
                             ),
                           ],
                         ),
@@ -159,6 +251,9 @@ class _VolumeSettingsScreenState extends State<VolumeSettingsScreen> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
+                            debugPrint(
+                              'back_button_clicked: from_screen=volume_settings, timestamp=${DateTime.now().millisecondsSinceEpoch}',
+                            );
                             Get.back();
                           },
                           style: ElevatedButton.styleFrom(
@@ -240,15 +335,28 @@ class _VolumeSettingsScreenState extends State<VolumeSettingsScreen> {
     required int maxValue,
     required ValueChanged<double> onChanged,
     required VoidCallback onDragStart,
+    required bool isSilent,
   }) {
-    final double sliderValue = currentValue.toDouble().clamp(0.0, maxValue.toDouble());
-    
+    final double sliderValue = currentValue.toDouble().clamp(
+      0.0,
+      maxValue.toDouble(),
+    );
+
+    // If silent mode is active, volume should be 0
+    final bool isMuted = isSilent;
+    final double displayValue = isMuted ? 0 : sliderValue;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.grey[900]?.withOpacity(0.6),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[800] ?? Colors.grey, width: 1),
+        border: Border.all(
+          color: isMuted
+              ? Colors.red.withOpacity(0.3)
+              : Colors.grey[800] ?? Colors.grey,
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,32 +367,40 @@ class _VolumeSettingsScreenState extends State<VolumeSettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: isMuted
+                      ? Colors.red.withOpacity(0.1)
+                      : Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: Colors.green, size: 18),
+                child: Icon(
+                  isMuted ? Icons.volume_off : icon,
+                  color: isMuted ? Colors.red : Colors.green,
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: isMuted ? Colors.red : Colors.white,
                   ),
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
+                  color: isMuted
+                      ? Colors.red.withOpacity(0.2)
+                      : Colors.green.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '$percentage%',
-                  style: const TextStyle(
-                    color: Colors.green,
+                  isMuted ? '0%' : '$percentage%',
+                  style: TextStyle(
+                    color: isMuted ? Colors.red : Colors.green,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -295,21 +411,29 @@ class _VolumeSettingsScreenState extends State<VolumeSettingsScreen> {
           const SizedBox(height: 4),
           Row(
             children: [
-              Icon(Icons.volume_down, size: 14, color: Colors.grey[400]),
+              Icon(
+                isMuted ? Icons.volume_off : Icons.volume_down,
+                size: 14,
+                color: isMuted ? Colors.red : Colors.grey[400],
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Slider(
-                  value: sliderValue,
+                  value: displayValue,
                   min: 0,
                   max: maxValue.toDouble(),
-                  activeColor: Colors.green,
+                  activeColor: isMuted ? Colors.red : Colors.green,
                   inactiveColor: Colors.grey[700],
-                  onChanged: onChanged,
-                  onChangeStart: (_) => onDragStart(),
+                  onChanged: isMuted ? null : onChanged,
+                  onChangeStart: isMuted ? null : (_) => onDragStart(),
                 ),
               ),
               const SizedBox(width: 4),
-              Icon(Icons.volume_up, size: 14, color: Colors.grey[400]),
+              Icon(
+                isMuted ? Icons.volume_off : Icons.volume_up,
+                size: 14,
+                color: isMuted ? Colors.red : Colors.grey[400],
+              ),
             ],
           ),
         ],
