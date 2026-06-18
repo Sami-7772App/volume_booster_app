@@ -47,8 +47,7 @@ dependencies:
   share_plus: ^7.2.2
   url_launcher: ^6.2.5
   android_intent_plus: ^4.0.3
-  google_mobile_ads: ^9.0.0
-  firebase_analytics: ^12.4.2
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -103,3 +102,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+  # flutter_launcher_icons:
+  # android: true
+  # ios: true
+  # image_path: "assets/logo.png"

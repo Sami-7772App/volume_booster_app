@@ -1,12 +1,5 @@
-
-
-
-
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-
 import 'package:volume_booster_fresh/controllers/booster_controller.dart';
 import 'package:volume_booster_fresh/views/widgets/custom_drawer.dart';
 import 'package:volume_booster_fresh/views/widgets/metallic_knob.dart';
@@ -19,41 +12,13 @@ class BoosterScreen extends StatefulWidget {
 }
 
 class _BoosterScreenState extends State<BoosterScreen> {
-  BannerAd? _bannerAd;
-  bool _isAdLoaded = false;
-
   @override
   void initState() {
     super.initState();
-    _loadBannerAd();
-  }
-
-  void _loadBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          setState(() {
-            _isAdLoaded = true;
-          });
-          print('✅ Banner ad loaded on Booster screen');
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-          print('❌ Banner ad failed to load: $error');
-          setState(() {
-            _isAdLoaded = false;
-          });
-        },
-      ),
-    )..load();
   }
 
   @override
   void dispose() {
-    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -296,23 +261,14 @@ class _BoosterScreenState extends State<BoosterScreen> {
                           ),
                         ),
                         
-                        // Add bottom padding to prevent content from being hidden behind buttons
+                        // Add bottom padding
                         SizedBox(
-                          height: _isAdLoaded ? 70 : 80, // Space for ad + buttons
+                          height: 80, // Space for buttons
                         ),
                       ],
                     ),
                   ),
                 ),
-
-                // Banner Ad - Now outside scrollable area, above buttons
-                if (_isAdLoaded && _bannerAd != null)
-                  Container(
-                    height: 50,
-                    width: double.infinity,
-                    color: Colors.black.withOpacity(0.2),
-                    child: AdWidget(ad: _bannerAd!),
-                  ),
 
                 // Dual Navigation Buttons - Fixed at bottom
                 Container(

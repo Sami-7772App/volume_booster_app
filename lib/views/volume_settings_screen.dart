@@ -1,7 +1,5 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:volume_booster_fresh/controllers/volume_settings_controller.dart';
 import 'package:volume_booster_fresh/services/volume_service.dart';
 import 'package:volume_booster_fresh/views/widgets/custom_drawer.dart';
@@ -14,41 +12,13 @@ class VolumeSettingsScreen extends StatefulWidget {
 }
 
 class _VolumeSettingsScreenState extends State<VolumeSettingsScreen> {
-  BannerAd? _bannerAd;
-  bool _isAdLoaded = false;
-
   @override
   void initState() {
     super.initState();
-    _loadBannerAd();
-  }
-
-  void _loadBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // Test ad unit ID
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          setState(() {
-            _isAdLoaded = true;
-          });
-          print('✅ Banner ad loaded');
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-          print('❌ Banner ad failed to load: $error');
-          setState(() {
-            _isAdLoaded = false;
-          });
-        },
-      ),
-    )..load();
   }
 
   @override
   void dispose() {
-    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -161,14 +131,6 @@ class _VolumeSettingsScreenState extends State<VolumeSettingsScreen> {
                         )
                       : const SizedBox.shrink(),
                 ),
-
-                // Banner Ad - Placed at TOP below AppBar
-                if (_isAdLoaded && _bannerAd != null)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    height: 50,
-                    child: AdWidget(ad: _bannerAd!),
-                  ),
 
                 // Volume Cards Section
                 Expanded(

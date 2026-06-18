@@ -1,8 +1,10 @@
+// import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:volume_booster_fresh/routes/app_page.dart';
+import 'package:volume_booster_fresh/services/app_open_ad_service.dart';
 
 // Services
 import 'package:volume_booster_fresh/services/media_volume_service.dart';
@@ -14,7 +16,6 @@ import 'package:volume_booster_fresh/services/settings_service.dart';
 import 'package:volume_booster_fresh/services/system_tone_service.dart';
 import 'package:volume_booster_fresh/services/equalizer_service.dart';
 import 'package:volume_booster_fresh/services/audio_focus_service.dart';
-import 'package:volume_booster_fresh/services/app_open_ad_service.dart';
 
 // Controllers
 import 'package:volume_booster_fresh/controllers/volume_settings_controller.dart';
@@ -28,9 +29,6 @@ import 'package:volume_booster_fresh/routes/app_routes.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
-
-  // Initialize Google Mobile Ads
-  MobileAds.instance.initialize();
 
   // Initialize services
   final permissionService = PermissionService();
@@ -69,7 +67,7 @@ void main() async {
   await audioPreviewService.init();
   Get.put(audioPreviewService);
 
-  // Initialize App Open Ad Service
+  // Initialize App Open Ad Service (ads disabled)
   final appOpenAdService = AppOpenAdService();
   await appOpenAdService.init();
   Get.put(appOpenAdService);
