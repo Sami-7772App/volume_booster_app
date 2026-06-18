@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.volume_booster_fresh"
+    namespace = "com.FutureDialLabs.Volume.Booster.Sound"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.volume_booster_fresh"
+        applicationId = "com.FutureDialLabs.Volume.Booster.Sound"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

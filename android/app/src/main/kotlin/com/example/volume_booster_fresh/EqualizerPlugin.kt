@@ -1,4 +1,4 @@
-package com.example.volume_booster_fresh
+package com.FutureDialLabs.Volume.Booster.Sound
 
 import android.content.Context
 import android.media.AudioManager

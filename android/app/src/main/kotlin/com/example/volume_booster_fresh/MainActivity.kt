@@ -1,4 +1,4 @@
-package com.example.volume_booster_fresh
+package com.FutureDialLabs.Volume.Booster.Sound
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine

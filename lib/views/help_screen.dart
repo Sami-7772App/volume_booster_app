@@ -65,22 +65,14 @@ class HelpScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   _buildFaqItem(
-                    question: 'How do you use Volume Control Launcher?',
+                    question: 'How do you use Volume Booster?',
                     answer:
                         'Simply open the app and use the volume slider to adjust your device volume. For booster mode, rotate the metallic knob past 100% to activate enhanced loudness.',
                   ),
                   const SizedBox(height: 12),
-                  _buildFaqItem(
-                    question: 'Why does my homescreen look different?',
-                    answer:
-                        'Volume Booster does not change your home screen. If your home screen looks different, you may have accidentally changed your launcher settings.',
-                  ),
+
                   const SizedBox(height: 12),
-                  _buildFaqItem(
-                    question: 'How do I reset my home screen?',
-                    answer:
-                        'Go to your device Settings > Apps > Default Apps > Home App, then select your preferred launcher.',
-                  ),
+
                   const SizedBox(height: 12),
                   _buildFaqItem(
                     question: 'Where are my apps?',
