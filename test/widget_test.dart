@@ -8,7 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:volume_booster_fresh/main.dart';
+import 'package:volume_booster_fresh/views/widgets/metallic_knob.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
