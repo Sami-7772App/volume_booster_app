@@ -139,7 +139,7 @@ class BoosterController extends GetxController {
       if (clamped <= 100) {
         previewVol = clamped / 100.0;
       } else {
-        previewVol = 1.0; // Max preview volume when boosted
+        previewVol = 1.0 + ((clamped - 100) / 100.0);
       }
       _previewService.updateVolumeSmooth(previewVol);
     }
@@ -162,7 +162,9 @@ class BoosterController extends GetxController {
     _updateTimer?.cancel();
     _pendingVolume = -1;
 
-
+    if (!_audioFocusService.isMediaPlaying.value) {
+      _previewService.playPreviewAtVolume(currentVolume.value);
+    }
 
     if (_settingsService.isVibrationEnabled.value) {
       Vibration.vibrate(duration: 15);

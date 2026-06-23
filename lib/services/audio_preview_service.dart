@@ -1,6 +1,3 @@
-
-
-
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:get/get.dart';
@@ -16,10 +13,9 @@ class AudioPreviewService extends GetxService {
     return this;
   }
 
-
   Future<void> updateVolumeSmooth(double volume) async {
     if (_isPlaying) {
-      await _audioPlayer?.setVolume(volume.clamp(0.0, 1.0));
+      await _audioPlayer?.setVolume(volume.clamp(0.0, 2.0));
     }
   }
 
@@ -38,8 +34,16 @@ class AudioPreviewService extends GetxService {
 
   Future<void> playPreviewAtVolume(int percentage) async {
     await stopPreview();
-  
-    await updateVolumeSmooth(percentage <= 100 ? percentage / 100.0 : 1.0);
+
+    final clamped = percentage.clamp(0, 200);
+    final previewVolume = clamped <= 100
+        ? clamped / 100.0
+        : 1.0 + ((clamped - 100) / 100.0);
+
+    await _audioPlayer?.setSource(AssetSource('audio/subwoofer_test.mp3'));
+    await _audioPlayer?.setVolume(previewVolume.clamp(0.0, 2.0));
+    await _audioPlayer?.resume();
+    _isPlaying = true;
     startInactivityTimer();
   }
 
