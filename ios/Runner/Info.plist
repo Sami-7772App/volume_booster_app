@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Volume Booster needs microphone access for audio recording and boost features.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Volume Booster may send notifications about audio settings and app updates.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
