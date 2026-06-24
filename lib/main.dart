@@ -24,10 +24,12 @@ import 'package:volume_booster_fresh/controllers/settings_controller.dart';
 import 'package:volume_booster_fresh/controllers/drawer_controller.dart';
 
 // Routes
+import 'package:volume_booster_fresh/config/env_config.dart';
 import 'package:volume_booster_fresh/routes/app_routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EnvConfig.load();
   await GetStorage.init();
 
   // Initialize services

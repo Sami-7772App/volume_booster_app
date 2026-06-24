@@ -76,6 +76,7 @@ flutter:
     # - assets/audio/debwong1951-tsunami-test-siren-431947.mp3
     - assets/audio/subwoofer_test.mp3
     - assets/images/metalic_knob.png
+    - .env
 
 
 flutter_launcher_icons:
