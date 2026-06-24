@@ -44,7 +44,7 @@ class AudioFocusService extends GetxService {
       final result = await _channel.invokeMethod('requestAudioFocus');
       print('✅ Audio focus requested: $result');
     } catch (e) {
-      print('❌ Error requesting audio focus: $e');
+      print('⚠️ Audio focus not available yet: $e');
     }
   }
   

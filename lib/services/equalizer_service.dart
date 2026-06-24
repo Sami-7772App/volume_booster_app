@@ -7,23 +7,29 @@ class EqualizerService extends GetxService {
   final RxBool isEnabled = false.obs;
   final RxInt currentGainDb = 0.obs;
   final RxString boostStatus = 'OFF'.obs;
+  bool _isInitialized = false;
 
   Future<EqualizerService> init() async {
-    await _initEqualizer();
+    // Defer native engine setup until boost is actually needed.
+    print('✅ Equalizer service ready (engine initializes on first boost)');
     return this;
   }
 
-  Future<void> _initEqualizer() async {
+  Future<void> _ensureInitialized() async {
+    if (_isInitialized) return;
     try {
       await _channel.invokeMethod('initEqualizer');
+      _isInitialized = true;
       print('✅ Equalizer ready - Up to +60dB boost available');
     } catch (e) {
       print('❌ Equalizer error: $e');
+      rethrow;
     }
   }
 
   Future<int> setLoudnessBoost(int percentage) async {
     try {
+      await _ensureInitialized();
       final gain = await _channel.invokeMethod('setLoudnessBoost', {'percent': percentage});
       final gainDb = gain as int? ?? 0;
       currentGainDb.value = gainDb;
@@ -37,6 +43,7 @@ class EqualizerService extends GetxService {
 
   Future<int> applyBoost(int percentage) async {
     try {
+      await _ensureInitialized();
       final gain = await _channel.invokeMethod('applyBoost', {'percent': percentage});
       final gainDb = gain as int? ?? 0;
       currentGainDb.value = gainDb;

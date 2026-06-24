@@ -4,6 +4,70 @@ import Flutter
 import MediaPlayer
 import UIKit
 
+// MARK: - Shared Audio Session
+
+enum AudioSessionCoordinator {
+  static let insufficientPriority: OSStatus = 561017449
+  private static var categoryConfigured = false
+  private static let lock = NSLock()
+
+  static func setupLifecycleRetry() {
+    NotificationCenter.default.addObserver(
+      forName: UIApplication.didBecomeActiveNotification,
+      object: nil,
+      queue: .main
+    ) { _ in
+      _ = try? activate(retries: 3)
+    }
+  }
+
+  @discardableResult
+  static func activate(retries: Int = 5) throws -> Bool {
+    lock.lock()
+    defer { lock.unlock() }
+
+    let session = AVAudioSession.sharedInstance()
+
+    if !categoryConfigured {
+      try session.setCategory(
+        .playback,
+        mode: .default,
+        options: [.mixWithOthers, .allowBluetooth, .allowBluetoothA2DP]
+      )
+      categoryConfigured = true
+    }
+
+    var lastError: Error?
+    for attempt in 0..<retries {
+      do {
+        try session.setActive(true)
+        return true
+      } catch let error as NSError {
+        lastError = error
+        let isTransientPriorityError = error.code == Int(insufficientPriority)
+        guard isTransientPriorityError, attempt < retries - 1 else {
+          throw error
+        }
+        lock.unlock()
+        Thread.sleep(forTimeInterval: 0.2 * Double(attempt + 1))
+        lock.lock()
+      }
+    }
+
+    if let lastError {
+      throw lastError
+    }
+    return false
+  }
+
+  static func deactivate() throws {
+    try AVAudioSession.sharedInstance().setActive(
+      false,
+      options: .notifyOthersOnDeactivation
+    )
+  }
+}
+
 // MARK: - Plugin Registrar
 
 enum VolumeBoosterPluginRegistrar {
@@ -56,14 +120,13 @@ class EqualizerPlugin: NSObject, FlutterPlugin {
   }
 
   private func initEqualizer(result: @escaping FlutterResult) {
+    if isInitialized {
+      result(true)
+      return
+    }
+
     do {
-      let session = AVAudioSession.sharedInstance()
-      try session.setCategory(
-        .playback,
-        mode: .default,
-        options: [.mixWithOthers, .allowBluetooth, .allowBluetoothA2DP]
-      )
-      try session.setActive(true)
+      try AudioSessionCoordinator.activate()
 
       let engine = AVAudioEngine()
       let eq = AVAudioUnitEQ(numberOfBands: 6)
@@ -239,6 +302,7 @@ class AudioFocusPlugin: NSObject, FlutterPlugin {
     let instance = AudioFocusPlugin()
     instance.channel = channel
     instance.setupObservers()
+    AudioSessionCoordinator.setupLifecycleRetry()
     registrar.addMethodCallDelegate(instance, channel: channel)
     print("AudioFocusPlugin: Attached to engine")
   }
@@ -317,12 +381,19 @@ class AudioFocusPlugin: NSObject, FlutterPlugin {
 
   private func requestAudioFocus(result: @escaping FlutterResult) {
     do {
-      let session = AVAudioSession.sharedInstance()
-      try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
-      try session.setActive(true)
-      let hasFocus = !session.secondaryAudioShouldBeSilencedHint
+      try AudioSessionCoordinator.activate()
+      let hasFocus = !AVAudioSession.sharedInstance().secondaryAudioShouldBeSilencedHint
       print("AudioFocusPlugin: Audio focus requested, hasFocus=\(hasFocus)")
       result(hasFocus)
+    } catch let error as NSError {
+      let isTransientPriorityError = error.code == Int(AudioSessionCoordinator.insufficientPriority)
+      if isTransientPriorityError {
+        print("AudioFocusPlugin: Audio focus deferred - another app has priority")
+        result(false)
+        return
+      }
+      print("AudioFocusPlugin: Error requesting audio focus - \(error.localizedDescription)")
+      result(FlutterError(code: "ERROR", message: error.localizedDescription, details: nil))
     } catch {
       print("AudioFocusPlugin: Error requesting audio focus - \(error.localizedDescription)")
       result(FlutterError(code: "ERROR", message: error.localizedDescription, details: nil))
@@ -331,7 +402,7 @@ class AudioFocusPlugin: NSObject, FlutterPlugin {
 
   private func abandonAudioFocus(result: @escaping FlutterResult) {
     do {
-      try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+      try AudioSessionCoordinator.deactivate()
       print("AudioFocusPlugin: Audio focus abandoned")
       result(true)
     } catch {
