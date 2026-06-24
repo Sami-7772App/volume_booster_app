@@ -21,7 +21,14 @@ class CustomDrawer extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            DrawerHeader(
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.fromLTRB(
+                16,
+                MediaQuery.paddingOf(context).top + 24,
+                16,
+                20,
+              ),
               decoration: BoxDecoration(
                 color: Colors.green,
                 gradient: LinearGradient(
@@ -29,20 +36,20 @@ class CustomDrawer extends StatelessWidget {
                 ),
               ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: const [
-                  Icon(Icons.volume_up, size: 60, color: Colors.white),
-                  SizedBox(height: 10),
+                  Icon(Icons.volume_up, size: 48, color: Colors.white),
+                  SizedBox(height: 8),
                   Text(
                     'Volume Control Launcher',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 5),
+                  SizedBox(height: 4),
                   Text(
                     'Boost up to 200%',
                     style: TextStyle(color: Colors.white70),
